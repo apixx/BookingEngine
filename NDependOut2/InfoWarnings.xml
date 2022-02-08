@@ -1,0 +1,84 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<InfoWarnings>
+  <Info>Begin full analysis with NDepend v2021.2.5</Info>
+  <Info>Visual Studio solution file resolved to absolute file path: from    {.\BookingEngine.sln}    to    {C:\Users\apix\Documents\Projects\BookingEngine\BookingEngine.sln}</Info>
+  <Info>Output directory resolved to absolute directory path: C:\Users\apix\Documents\Projects\BookingEngine\NDependOut2</Info>
+  <Info>.NET Assemblies resolved from the Visual Studio solution file {C:\Users\apix\Documents\Projects\BookingEngine\BookingEngine.sln}
+   C:\Users\apix\Documents\Projects\BookingEngine\BookingEngine\bin\Debug\net6.0\BookingEngine.dll
+   C:\Users\apix\Documents\Projects\BookingEngine\BookingEngine.BusinessLogic\bin\Debug\net6.0\BookingEngine.BusinessLogic.dll
+   C:\Users\apix\Documents\Projects\BookingEngine\BookingEngine.Data\bin\Debug\net6.0\BookingEngine.Data.dll
+   C:\Users\apix\Documents\Projects\BookingEngine\BookingEngine.DataServices\bin\Debug\net6.0\BookingEngine.DataServices.dll
+   C:\Users\apix\Documents\Projects\BookingEngine\BookingEngine.Entities\bin\Debug\net6.0\BookingEngine.Entities.dll</Info>
+  <Info>No .NET Assembly filtered out from the Visual Studio solution file {C:\Users\apix\Documents\Projects\BookingEngine\BookingEngine.sln}.</Info>
+  <Info>Concurrent mode</Info>
+  <Warning>Assembly {BookingEngine.DataServices} doesn't contain any type.</Warning>
+  <Info>.NET Assemblies loaded from {C:\Program Files\dotnet\shared\Microsoft.NETCore.App\6.0.0} 
+   System.ComponentModel.Annotations.dll   v6.0.0.0
+   System.Linq.Queryable.dll   v6.0.0.0
+   System.Net.Primitives.dll   v6.0.0.0
+   System.Text.Encodings.Web.dll   v6.0.0.0
+   System.Diagnostics.DiagnosticSource.dll   v6.0.0.0
+   System.Linq.dll   v6.0.0.0
+   System.Security.Claims.dll   v6.0.0.0
+   System.Collections.dll   v6.0.0.0
+   System.Linq.Expressions.dll   v6.0.0.0
+   System.Runtime.Loader.dll   v6.0.0.0
+   System.Net.Http.dll   v6.0.0.0
+   System.ComponentModel.dll   v6.0.0.0
+   System.Runtime.dll   v6.0.0.0</Info>
+  <Info>.NET Assemblies loaded from {C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\6.0.0}  [ 0 , 19 ]
+   Microsoft.Extensions.Configuration.Json.dll   v6.0.0.0
+   Microsoft.Extensions.Configuration.dll   v6.0.0.0
+   Microsoft.AspNetCore.Hosting.dll   v6.0.0.0
+   Microsoft.AspNetCore.Authorization.Policy.dll   v6.0.0.0
+   Microsoft.AspNetCore.HttpsPolicy.dll   v6.0.0.0
+   Microsoft.AspNetCore.Diagnostics.dll   v6.0.0.0
+   Microsoft.AspNetCore.Mvc.dll   v6.0.0.0
+   Microsoft.AspNetCore.Authentication.dll   v6.0.0.0
+   Microsoft.AspNetCore.Identity.dll   v6.0.0.0
+   Microsoft.Extensions.Http.dll   v6.0.0.0
+   Microsoft.Extensions.Options.ConfigurationExtensions.dll   v6.0.0.0
+   Microsoft.AspNetCore.dll   v6.0.0.0
+   Microsoft.Extensions.Hosting.dll   v6.0.0.0
+   Microsoft.AspNetCore.Authorization.dll   v6.0.0.0
+   Microsoft.Extensions.Caching.Abstractions.dll   v6.0.0.0
+   Microsoft.Extensions.Caching.Memory.dll   v6.0.0.0
+   Microsoft.AspNetCore.Html.Abstractions.dll   v6.0.0.0
+   Microsoft.AspNetCore.Mvc.TagHelpers.dll   v6.0.0.0
+   Microsoft.AspNetCore.Razor.dll   v6.0.0.0
+   Microsoft.AspNetCore.Mvc.Razor.dll   v6.0.0.0</Info>
+  <Info>.NET Assemblies loaded from {C:\Program Files\dotnet\shared\Microsoft.AspNetCore.App\6.0.0}  [ 20 , 34 ]
+   Microsoft.AspNetCore.Mvc.Abstractions.dll   v6.0.0.0
+   Microsoft.Extensions.Logging.Abstractions.dll   v6.0.0.0
+   Microsoft.AspNetCore.Mvc.RazorPages.dll   v6.0.0.0
+   Microsoft.AspNetCore.Mvc.ViewFeatures.dll   v6.0.0.0
+   Microsoft.Extensions.Options.dll   v6.0.0.0
+   Microsoft.AspNetCore.Routing.dll   v6.0.0.0
+   Microsoft.AspNetCore.Authentication.Abstractions.dll   v6.0.0.0
+   Microsoft.AspNetCore.Http.Abstractions.dll   v6.0.0.0
+   Microsoft.Extensions.DependencyInjection.Abstractions.dll   v6.0.0.0
+   Microsoft.Extensions.Configuration.Abstractions.dll   v6.0.0.0
+   Microsoft.Extensions.Logging.dll   v6.0.0.0
+   Microsoft.AspNetCore.Hosting.Abstractions.dll   v6.0.0.0
+   Microsoft.Extensions.Hosting.Abstractions.dll   v6.0.0.0
+   Microsoft.AspNetCore.Razor.Runtime.dll   v6.0.0.0
+   Microsoft.AspNetCore.Mvc.Core.dll   v6.0.0.0</Info>
+  <Warning>The source file {C:\Users\apix\Documents\Projects\BookingEngine\BookingEngine.BusinessLogic\Services\AmadeusApiServiceProvider.cs} (last modified 18 Jan 2022 20:09:36) and the PDB file of the assembly {BookingEngine.BusinessLogic} (last modified 17 Jan 2022 21:02:29) are not in-sync.</Warning>
+  <Warning>The source file {C:\Users\apix\Documents\Projects\BookingEngine\BookingEngine.BusinessLogic\Services\AmadeusTokenService.cs} (last modified 18 Jan 2022 19:35:34) and the PDB file of the assembly {BookingEngine.BusinessLogic} (last modified 17 Jan 2022 21:02:29) are not in-sync.</Warning>
+  <Warning>The source file {C:\Users\apix\Documents\Projects\BookingEngine\BookingEngine.BusinessLogic\Models\HotelSearchItemResponse.cs} (last modified 17 Jan 2022 23:46:24) and the PDB file of the assembly {BookingEngine.BusinessLogic} (last modified 17 Jan 2022 21:02:29) are not in-sync.</Warning>
+  <Warning>The source file {C:\Users\apix\Documents\Projects\BookingEngine\BookingEngine.Data\Repositories\SearchRequestRepository.cs} (last modified 18 Jan 2022 00:04:35) and the PDB file of the assembly {BookingEngine.Data} (last modified 17 Jan 2022 21:02:28) are not in-sync.</Warning>
+  <Info>53 source files parsed ; all source files found ; 4 source files not in-sync with PDB</Info>
+  <Info>0 code rule has been extracted from code.</Info>
+  <Info>No dependency cycle detected in assemblies referencement graph.</Info>
+  <Info>Do merge code generated by compiler into application code.</Info>
+  <Info>Analyse dependencies of your application.</Info>
+  <Info>No SuppressMessageAttribute found in the analyzed code base. Since NDepend v2018.2 SuppressMessageAttribute can be used to suppress NDepend issues. Don't forget to set in your projects the compilation symbol CODE_ANALYSIS to use this attribute to suppress NDepend issues.</Info>
+  <Info>Persisting code model snapshot in {C:\Users\apix\Documents\Projects\BookingEngine\NDependOut2\NDependAnalysisResult_BookingEngine_2022Jan19_10h41.ndar}</Info>
+  <Info>Log trend metrics values.</Info>
+  <Info>Execute queries and rules.</Info>
+  <Error>2 quality gates fail:
+  - 'Critical Rules Violated' value 2 rules greater than fail threshold 0 rules
+  - 'Debt Rating per Namespace' value 1 namespaces greater than fail threshold 0 namespaces</Error>
+  <Info>Building the report (standard).</Info>
+  <Info>NDepend analysis done. Duration: 00:12.575</Info>
+</InfoWarnings>
