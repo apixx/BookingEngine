@@ -1,4 +1,6 @@
-﻿namespace BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels;
+﻿using BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.HotelSearch;
+
+namespace BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels;
 
 public class AmadeusApiRoomDetailsResponse
 {
@@ -9,7 +11,7 @@ public class AmadeusApiRoomDetailsResponse
 
 public class AmadeusApiRoomDetailsResponseItem
 {
-    public HotelItem Hotel { get; set; }
+    public AmadeusApiHotelItem Hotel { get; set; }
     public bool Available { get; set; }
     public List<AmadeusApiOfferItem> Offers { get; set; }
 }

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using BookingEngine.Entities.Models.Authentication;
 
 namespace BookingEngine.Entities.Models
 {
@@ -10,5 +11,7 @@ namespace BookingEngine.Entities.Models
         public DateTime DateCreated { get; set; }
         public int OrderStatusId { get; set; }
         public virtual OrderStatus OrderStatus { get; set; }
+        public string UserId { get; set; }
+        public ApplicationUser User { get; set; }
     }
 }

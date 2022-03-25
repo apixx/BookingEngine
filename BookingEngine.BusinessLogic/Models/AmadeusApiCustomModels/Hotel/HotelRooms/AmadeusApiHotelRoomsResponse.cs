@@ -1,4 +1,5 @@
-﻿using System;
+﻿using BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.HotelSearch;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,7 +16,7 @@ namespace BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels
 
     public class AmadeusApiHotelRoomsResponseItem
     {
-        public HotelItem Hotel { get; set; }
+        public AmadeusApiHotelItem Hotel { get; set; }            
         public bool Available { get; set; }
         public List<AmadeusApiOfferItem> Offers { get; set; }
 

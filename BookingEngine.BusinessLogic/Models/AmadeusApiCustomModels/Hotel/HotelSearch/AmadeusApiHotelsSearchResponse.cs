@@ -19,7 +19,7 @@ namespace BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.HotelS
         public List<AmadeusApiHotelItemOffer> Offers { get; set; }
         public PriceItem BestOffer
         {
-            get 
+            get
             {
                 if (Available)
                 {
@@ -43,6 +43,8 @@ namespace BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.HotelS
         public double Latitude { get; set; }
         public double Longitude { get; set; }
         public AddressItem Address { get; set; }
+        public List<string> Amenities { get; set; }
+        public List<MediaItem> media { get; set; }
     }
 
     public class AmadeusApiHotelItemOffer

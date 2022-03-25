@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.Booking;
+using AssociatedRecord = BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.Booking.AssociatedRecord;
 
 namespace BookingEngine.BusinessLogic.Mapping
 {
@@ -36,6 +38,9 @@ namespace BookingEngine.BusinessLogic.Mapping
 
             CreateMap<SearchRequestHotel, HotelSearchItemResponse>()
                 .ForMember(dest =>
+                    dest.HotelId, 
+                    opt => opt.MapFrom(src => src.Hotel.HotelId))
+                .ForMember(dest =>
                     dest.Name,
                     opt => opt.MapFrom(src => src.Hotel.Name))
                 .ForMember(dest =>
@@ -44,6 +49,17 @@ namespace BookingEngine.BusinessLogic.Mapping
                 .ForMember(dest =>
                     dest.Description,
                     opt => opt.MapFrom(src => src.Hotel.Description));
+
+            CreateMap<HotelBookingItem, OrderItem>()
+                .ForMember(dest => dest.Type, opt => opt.MapFrom(src => src.Type))
+                .ForMember(dest => dest.BookingItemId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.ProviderConfirmationId, opt => opt.MapFrom(src => src.ProviderConfirmationId))
+                .ForMember(dest => dest.SelfUri, opt => opt.MapFrom(src => src.SelfUri));
+
+            CreateMap<AssociatedRecord, AssociatedRecordItem>()
+                .ForMember(dest => dest.OriginSystemCode, opt => opt.MapFrom(src => src.OriginSystemCode))
+                .ForMember(dest => dest.Reference, opt => opt.MapFrom(src => src.Reference));
+
         }
     }
 }

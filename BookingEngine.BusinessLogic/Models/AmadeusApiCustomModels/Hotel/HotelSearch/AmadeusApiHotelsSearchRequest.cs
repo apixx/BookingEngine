@@ -17,16 +17,12 @@ namespace BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.HotelS
         #endregion
 
         #region defaults by requirements in assingment
-        //as requsted in assingment
         public int Radius { get; } = 100;
 
-        //as requsted in assingment
         public string RadiusUnit { get; } = "KM";
 
-        //as requsted in assingment
         public int Adults { get; set; } = 1;
 
-        //as requsted in assingment
         public bool BestRateOnly { get; set; } = true;
 
         public bool IncludeClosed { get; } = false;

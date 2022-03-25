@@ -31,30 +31,7 @@ namespace BookingEngine.BusinessLogic.Services
             _unitOfWork = unitOfWork;
         }
 
-        //public async Task<HotelRoomsResponse> SearchHotelRooms(HotelRoomsUserRequest hotelRoomsUserRequest, CancellationToken cancellationToken)
-        //{
-        //    var response = new HotelRoomsResponse(hotelRoomsUserRequest);
-
-        //    var amadeusFetchModel =
-        //        await _amadeusApiHotelRoomsServiceProvider.FetchAmadeusHotelRooms(hotelRoomsUserRequest,
-        //            cancellationToken);
-
-        //    response.Items = amadeusFetchModel.Item.Offers;
-
-        //    foreach (var offerItem in amadeusFetchModel.Item.Offers)
-        //    {
-        //        response.Items.Add(offerItem);
-        //    }
-
-        //    return response;
-        //}
-
-        /// <summary>
-        /// Main method for hotels search data, combines logic for getting data from database or fetching it from Amadues Api service or combination of the two
-        /// </summary>
-        /// <param name="hotelsSearchRequest"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns>HotelsSearchAmaduesFetchModel - requested items and nextItemsUrl with url from Amadues Api to get next items</returns>
+        
         public async Task<HotelsSearchResponse> SearchHotels(HotelsSearchUserRequest hotelsSearchRequest, CancellationToken cancellationToken)
         {
             var response = new HotelsSearchResponse(hotelsSearchRequest);
@@ -86,7 +63,7 @@ namespace BookingEngine.BusinessLogic.Services
                 }
                 // no enough items in database, try to fetch next items from stored NextItemsLink (Amadeus api does not provide classical pagination, returns only nextItemsLink)
                 // if there is no NextItemsLink, that is it, page will be empty
-                else if (!String.IsNullOrEmpty(searchRequestInDb.NextItemsLink))
+                if (!String.IsNullOrEmpty(searchRequestInDb.NextItemsLink))
                 {
                     // get NextItemsLink from db, if that is not enough
                     int moreItemsToFetch = minimumItemsNeededInDb - currentlyItemsInDb;
@@ -136,7 +113,7 @@ namespace BookingEngine.BusinessLogic.Services
                 await _searchRequestRepository.AddAsync(searchRequest);
                 await _unitOfWork.CompleteAsync();
 
-                await this.SaveFetchedItems(amaduesFetchModel, searchRequest.SearchRequestId, cancellationToken);
+                await SaveFetchedItems(amaduesFetchModel, searchRequest.SearchRequestId, cancellationToken);
 
                 var requstedItemsFromDb = await _searchRequestHotelRepository.GetForCurrentPageIncludedAsync(searchRequest.SearchRequestId, hotelsSearchRequest.PageSize, hotelsSearchRequest.PageOffset);
 

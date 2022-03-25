@@ -115,16 +115,25 @@ namespace BookingEngine
             services.AddSingleton<MyMemoryCache>();
             services.AddScoped<IHotelsSearchService, HotelsSearchService>();
             services.AddScoped<IAmadeusApiHotelRoomsServiceProvider, AmadeusApiHotelRoomsServiceProvider>();
+            services.AddScoped<IAmadeusApiHotelBookingServiceProvider, AmadeusApiHotelBookingServiceProvider>();
             services.AddScoped<IProcessApiResponse, ProcessApiResponse>();
             services.AddScoped<ISearchRequestRepository, SearchRequestRepository>();
             services.AddScoped<ISearchRequestHotelRepository, SearchRequestHotelRepository>();
             services.AddScoped<IHotelRepository, HotelRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
-            // TODO: dodadeno da se zastitime od cyclic reference koga se pravi serijalizicija vo json
-            // primer bus lanes sodrzi city a toj sodrzi buslanes, pa json znae da vleze vo endless loop
+            // dodadeno da se zastitime od cyclic reference koga se pravi serijalizicija vo json
             services.AddControllers().AddNewtonsoftJson(x =>
                 x.SerializerSettings.ReferenceLoopHandling = Newtonsoft.Json.ReferenceLoopHandling.Ignore);
+
+            services.AddDistributedMemoryCache();
+
+            services.AddSession(opts =>
+            {
+                opts.IdleTimeout = TimeSpan.FromMinutes(60);
+            });
+
+            services.AddMemoryCache();
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -147,6 +156,8 @@ namespace BookingEngine
                 app.UseDeveloperExceptionPage();
             }
 
+          
+
             app.UseHttpsRedirection();
 
             // Enable middleware to serve generated Swagger as a JSON endpoint.
@@ -165,6 +176,8 @@ namespace BookingEngine
             app.UseAuthentication();
 
             app.UseAuthorization();
+
+            app.UseSession();
 
             app.UseEndpoints(endpoints =>
             {

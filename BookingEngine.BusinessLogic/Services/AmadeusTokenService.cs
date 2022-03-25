@@ -28,11 +28,6 @@ namespace BookingEngine.BusinessLogic.Services
             _logger = logger;
         }
 
-        /// <summary>
-        /// Gets the authorization token using asynchronous POST request
-        /// </summary>
-        /// <param name="cancellationToken"></param>    
-        /// <returns>Access Token</returns>
         public async Task<string> GetAmadeusToken(CancellationToken cancellationToken)
         {
             if(String.IsNullOrEmpty(_tokenString) || _tokenExpiration < DateTime.Now)

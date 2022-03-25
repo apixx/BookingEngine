@@ -19,7 +19,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Models\AmadeusApiCustomModels\Hotel\RoomDetails\" />
+    <Folder Include="Models\DTOs\" />
   </ItemGroup>
 
 </Project>

@@ -4,7 +4,11 @@ using BookingEngine.Helpers;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using System.Net;
+using System.Security.Claims;
+using AutoMapper;
 using BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels;
+using BookingEngine.Entities.Models;
+using Newtonsoft.Json;
 
 namespace BookingEngine.Controllers
 {
@@ -15,14 +19,19 @@ namespace BookingEngine.Controllers
         private readonly ILogger<HotelsController> _logger;
         private readonly IHotelsSearchService _hotelsSearchService;
         private readonly IAmadeusApiHotelRoomsServiceProvider _hotelRoomsService;
+        private readonly IAmadeusApiHotelBookingServiceProvider _bookingService;
+        private readonly IMapper _mapper;
         private MemoryCache _cache;
+        private const string KEY = "user_cache";
 
-        public HotelsController(ILogger<HotelsController> logger, IHotelsSearchService hotelsSearchService, IAmadeusApiHotelRoomsServiceProvider hotelRoomsService, MyMemoryCache memoryCache)
+        public HotelsController(ILogger<HotelsController> logger, IHotelsSearchService hotelsSearchService, IAmadeusApiHotelRoomsServiceProvider hotelRoomsService, MyMemoryCache memoryCache, IAmadeusApiHotelBookingServiceProvider bookingService, IMapper mapper)
         {
             _logger = logger;
             _hotelsSearchService = hotelsSearchService;
             _hotelRoomsService = hotelRoomsService;
             _cache = memoryCache.Cache;
+            _bookingService = bookingService;
+            _mapper = mapper;
         }
 
         /// <summary>
@@ -128,6 +137,9 @@ namespace BookingEngine.Controllers
 
                 response = await _hotelRoomsService.FetchAmadeusHotelRooms(hotelRoomsRequest, cancellationToken);
 
+                HttpContext.Session.SetString("CheckInDate", checkInDate.ToString());
+                HttpContext.Session.SetString("CheckOutDate", checkOutDate.ToString());
+
                 return Ok(response);
             }
             catch (ArgumentException argEx)
@@ -167,7 +179,18 @@ namespace BookingEngine.Controllers
 
                 response = await _hotelRoomsService.FetchAmadeusRoomDetails(roomsDetailsRequest, cancellationToken);
 
+                // Add hotel and offer info to session, used in Booking action
+                HttpContext.Session.SetObject("RoomDetailsResponse", response);
+
+                
+
+                // _cache.Set(response.ToCacheKey(), response, cacheEntryOptions);
+
+                // AddToCache(response);
+
                 return Ok(response);
+
+                //return RedirectToAction("Booking", "Hotels", response);
             }
             catch (ArgumentException argEx)
             {
@@ -178,6 +201,69 @@ namespace BookingEngine.Controllers
             {
                 _logger.LogError(reqEx, "Cannot retrieve Amadeus Room Details information from Amadeus API.");
                 return StatusCode((int)HttpStatusCode.BadGateway, new { message = "Cannot retrieve Amadeus Room Details information from Amadeus API. Reason: " + reqEx.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Internal error.");
+                return StatusCode((int)HttpStatusCode.InternalServerError, new { message = "Internal error." });
+            }
+        }
+        
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="hotelBookingUserRequest"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("booking")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HotelBookingAmadeusFetchModel))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(void))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status502BadGateway)]
+        public async Task<ActionResult<HotelBookingAmadeusFetchModel>> Booking([FromBody] HotelBookingUserRequest hotelBookingUserRequest, CancellationToken cancellationToken)
+        {
+            
+            try
+            {
+                HotelBookingUserRequest bookingUserRequest = new HotelBookingUserRequest(hotelBookingUserRequest.HotelBookingRequest);
+                
+                //ValidateAndSanitazeRoomDetailsSearchRequest(bookingUserRequest);
+
+                var response = await _bookingService.FetchAmadeusHotelBooking(bookingUserRequest, cancellationToken);
+
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var userEmail = User.FindFirstValue(ClaimTypes.Email);
+
+
+           
+
+                DateTime checkInDate = DateTime.Parse(HttpContext.Session.GetString("CheckInDate"));
+                DateTime checkOutDate = DateTime.Parse(HttpContext.Session.GetString("CheckOutDate"));
+                // retrive hotel and offer data from session
+                var roomDetailsResponse = HttpContext.Session.GetObject<RoomDetailsAmadeusFetchModel>("RoomDetailsResponse");
+
+                // TODO: store in db data from the previous action (RoomDetails)
+                await _bookingService.CompleteBooking(hotelBookingUserRequest, roomDetailsResponse, response, checkInDate, checkOutDate, cancellationToken);
+
+                // TODO: save user's reservation to DB
+            
+
+                var model = GetCachedModel;
+
+                
+                return Ok(response);
+            }
+            catch (ArgumentException argEx)
+            {
+                _logger.LogWarning(argEx, argEx.Message);
+                return StatusCode((int)HttpStatusCode.BadRequest, new { message = argEx.Message });
+            }
+            catch (HttpRequestException reqEx)
+            {
+                _logger.LogError(reqEx, "Cannot retrieve Amadeus Booking information from Amadeus API.");
+                return StatusCode((int)HttpStatusCode.BadGateway, new { message = "Cannot retrieve Amadeus Booking information from Amadeus API. Reason: " + reqEx.Message });
             }
             catch (Exception ex)
             {
@@ -255,6 +341,44 @@ namespace BookingEngine.Controllers
             //{
             //    throw new ArgumentException("Hotel ID must have three letters.");
             //}
+        }
+
+        public void AddToCache(RoomDetailsAmadeusFetchModel response)
+        {
+            var options = new MemoryCacheEntryOptions
+            {
+                Size = 1,
+                SlidingExpiration = TimeSpan.FromMinutes(2),
+                // Remove from cache after this time, regardless of sliding expiration
+                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
+            };
+
+            _cache.Set<RoomDetailsAmadeusFetchModel>(KEY, response, options);
+        }
+
+        public RoomDetailsAmadeusFetchModel GetCachedModel()
+        {
+            RoomDetailsAmadeusFetchModel model = null;
+            if(!_cache.TryGetValue(KEY, out model))
+            {
+
+            }
+            return _cache.Get<RoomDetailsAmadeusFetchModel>(KEY);
+        }
+
+    }
+
+    public static class SessionExtensions
+    {
+        public static void SetObject(this ISession session, string key, object value)
+        {
+            session.SetString(key, JsonConvert.SerializeObject(value));
+        }
+
+        public static T GetObject<T>(this ISession session, string key)
+        {
+            var value = session.GetString(key);
+            return value == null ? default(T) : JsonConvert.DeserializeObject<T>(value);
         }
     }
 }

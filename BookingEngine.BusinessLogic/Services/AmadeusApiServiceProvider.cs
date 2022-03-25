@@ -3,7 +3,6 @@ using BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels;
 using BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.HotelSearch;
 using BookingEngine.BusinessLogic.Services.Interfaces;
 using Microsoft.Extensions.Logging;
-using Newtonsoft.Json;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Mime;
@@ -15,22 +14,17 @@ namespace BookingEngine.BusinessLogic.Services
         private readonly HttpClient _httpClient;
         private readonly ILogger<AmadeusApiServiceProvider> _logger;
         private readonly IAmadeusTokenService _amadeusTokenService;
+        private readonly IProcessApiResponse _processApiResponse;
 
-        public AmadeusApiServiceProvider(HttpClient httpClient, ILogger<AmadeusApiServiceProvider> logger, IAmadeusTokenService amadeusTokenService)
+        public AmadeusApiServiceProvider(HttpClient httpClient, ILogger<AmadeusApiServiceProvider> logger, IAmadeusTokenService amadeusTokenService, IProcessApiResponse processApiResponse)
         {
             _httpClient = httpClient;
             _amadeusTokenService = amadeusTokenService;
-            _logger = logger;   
+            _logger = logger;
+            _processApiResponse = processApiResponse;
         }
 
 
-        /// <summary>
-        /// Fetch from Amadeus API, maximum nubmer of items Amadeus API returns in one request is 100 (we always query for this maximum number), so if more items are needed it fetches recursively.
-        /// Method returns data from Amadues Search Hotels Api including all preceding data and data for requested page (+ surplus up to 100 from current request).
-        /// </summary>
-        /// <param name="hotelsSearchRequest"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
         public async Task<HotelsSearchAmadeusFetchModel> FetchAmadeusHotels(HotelsSearchUserRequest hotelsSearchRequest, CancellationToken cancellationToken)
         {
             HotelsSearchAmadeusFetchModel amadeusFetchModel = new HotelsSearchAmadeusFetchModel();
@@ -54,14 +48,16 @@ namespace BookingEngine.BusinessLogic.Services
 
             if (response.StatusCode == HttpStatusCode.BadRequest)
             {
-                var errors = await ProcessError(response);
+                var errors =
+                    await _processApiResponse.ProcessError<AmadeusApiErrorResponse>(response);
                 var firstError = errors.Errors.FirstOrDefault();
                 throw new HttpRequestException(firstError.Code + " - " + firstError.Title);
             }
 
             response.EnsureSuccessStatusCode();
 
-            var currentHotelsResponse = await ProcessResponse(response);
+            var currentHotelsResponse =
+                await _processApiResponse.ProcessResponse<AmadeusApiHotelsSearchResponse>(response);
             _logger.LogInformation("Successful in first request from Amadeus API");
 
             amadeusFetchModel.Items.AddRange(currentHotelsResponse.Data);
@@ -175,13 +171,13 @@ namespace BookingEngine.BusinessLogic.Services
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenString);
 
             // Send asynchronous GET client request to the uri parameter with a passed cancellationToken.
-            // 
             HttpResponseMessage response = await _httpClient.GetAsync(uri, cancellationToken);
 
             // If the response is invalid, call ProcessError to deserialize the error object
             if (response.StatusCode == System.Net.HttpStatusCode.BadRequest)
             {
-                var errors = await ProcessError(response);
+                var errors =
+                    await _processApiResponse.ProcessError<AmadeusApiErrorResponse>(response);
                 var firstError = errors.Errors[0];
                 throw new HttpRequestException(firstError.Code + " - " + firstError.Title);
             }
@@ -190,67 +186,10 @@ namespace BookingEngine.BusinessLogic.Services
             response.EnsureSuccessStatusCode();
 
             // Deserialize the valid response to object.
-            var amadeusHotelsResponse = await ProcessResponse(response);
+            var amadeusHotelsResponse =
+                await _processApiResponse.ProcessResponse<AmadeusApiHotelsSearchResponse>(response);
 
             return amadeusHotelsResponse;
-        }
-
-        /// <summary>
-        /// Deserialize the valid response into AmadeusApiHotelsSearchResponse.
-        /// </summary>
-        /// <param name="response"></param>
-        /// <returns>AmadeusApiHotelsSearchResponse object</returns>
-        /// <exception cref="Exception"></exception>
-        public async Task<AmadeusApiHotelsSearchResponse> ProcessResponse(HttpResponseMessage response)
-        {
-            try
-            {
-                var contentStream = await response.Content.ReadAsStreamAsync();
-
-                using var streamReader = new StreamReader(contentStream);
-                using var jsonReader = new JsonTextReader(streamReader);
-
-                JsonSerializer serializer = new JsonSerializer();
-
-                var searchResponse = serializer.Deserialize<AmadeusApiHotelsSearchResponse>(jsonReader);
-
-                _logger.LogInformation("Response from Amadeus api succesfull. Model fetched: " + searchResponse.ToString());
-
-                return searchResponse;
-            }
-            catch (Exception e)
-            {
-                throw new Exception("Could not parse JSON response for Amadeus hotels search.", e);
-            }
-        }
-
-        /// <summary>
-        /// Deserialize the error(invalid) response.
-        /// </summary>
-        /// <param name="response"></param>
-        /// <returns>AmadeusApiErrorResponse object</returns>
-        /// <exception cref="Exception"></exception>
-        public async Task<AmadeusApiErrorResponse> ProcessError(HttpResponseMessage response)
-        {
-            try
-            {
-                var contentStream = await response.Content.ReadAsStreamAsync();
-
-                using var streamReader = new StreamReader(contentStream);
-                using var jsonReader = new JsonTextReader(streamReader);
-
-                JsonSerializer serializer = new JsonSerializer();
-
-                var searchResponse = serializer.Deserialize<AmadeusApiErrorResponse>(jsonReader);
-
-                _logger.LogInformation("Response from Amadeus api succesfull. Model fetched: " + searchResponse.ToString());
-
-                return searchResponse;
-            }
-            catch (Exception e)
-            {
-                throw new Exception("Could not parse JSON Error for Amadeus hotels search.", e);
-            }
         }
     }
 }

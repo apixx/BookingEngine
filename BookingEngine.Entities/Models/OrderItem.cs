@@ -15,5 +15,10 @@ namespace BookingEngine.Entities.Models
         public string ProductItem { get; set; }
         public int OrderId { get; set; }
         public virtual Order Order { get; set; }
+
+        public string Type { get; set; }
+        public string BookingItemId { get; set; }
+        public string ProviderConfirmationId { get; set; }
+        public string SelfUri { get; set; }
     }
 }
