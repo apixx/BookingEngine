@@ -20,5 +20,21 @@ namespace BookingEngine.Entities.Models
         public string BookingItemId { get; set; }
         public string ProviderConfirmationId { get; set; }
         public string SelfUri { get; set; }
+
+        // Hotel info
+        public string HotelId { get; set; }
+        public string HotelName { get; set; }
+        public string HotelCityCode { get; set; }
+
+        // Offer info
+        public int OfferId { get; set; }
+        public DateTime CheckInDate { get; set; }
+        public DateTime CheckOutDate { get; set; }
+        public int RoomQuantity { get; set; }
+        public string BoardType { get; set; }
+        public string CommisionPercentage { get; set; }
+        public string CommisionAmount { get; set; }
+        public float TotalPrice { get; set; }
+        public string Currency { get; set; }
     }
 }

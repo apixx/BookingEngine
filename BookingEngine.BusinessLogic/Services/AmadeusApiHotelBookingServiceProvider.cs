@@ -14,6 +14,8 @@ using System.Text.Json;
 using BookingEngine.Data.Repositories.Interfaces;
 using Newtonsoft.Json.Serialization;
 using JsonSerializer = Newtonsoft.Json.JsonSerializer;
+using AutoMapper;
+using BookingEngine.Entities.Models;
 
 namespace BookingEngine.BusinessLogic.Services;
 
@@ -23,14 +25,16 @@ public class AmadeusApiHotelBookingServiceProvider : IAmadeusApiHotelBookingServ
     private readonly ILogger<AmadeusApiHotelBookingResponse> _logger;
     private readonly IAmadeusTokenService _amadeusTokenService;
     private readonly IProcessApiResponse _processApiResponse;
+    private readonly IMapper _mapper;
     //private readonly IOrderRepository _orderRepository;
 
-    public AmadeusApiHotelBookingServiceProvider(HttpClient httpClient, ILogger<AmadeusApiHotelBookingResponse> logger, IAmadeusTokenService amadeusTokenService, IProcessApiResponse processApiResponse) //IOrderRepository orderRepository)
+    public AmadeusApiHotelBookingServiceProvider(HttpClient httpClient, ILogger<AmadeusApiHotelBookingResponse> logger, IAmadeusTokenService amadeusTokenService, IProcessApiResponse processApiResponse, IMapper mapper) //IOrderRepository orderRepository)
     {
         _httpClient = httpClient;
         _logger = logger;
         _processApiResponse = processApiResponse;
         _amadeusTokenService = amadeusTokenService;
+        _mapper = mapper;
         //_orderRepository = orderRepository;
     }
 
@@ -43,7 +47,23 @@ public class AmadeusApiHotelBookingServiceProvider : IAmadeusApiHotelBookingServ
         //var associatedRecordItem =
         //    _mapper.Map<AssociatedRecordItem>(response.Item.Data.FirstOrDefault().AssociatedRecords.FirstOrDefault());
 
+        // get bookingUserRequest items
+
+        var bookingItem = _mapper.Map<OrderItem>(bookingResponse.Item.Data.FirstOrDefault());
+        bookingItem = _mapper.Map<OrderItem>(roomDetailsResponse.Item.Hotel);
+        bookingItem = _mapper.Map<OrderItem>(roomDetailsResponse.Item.Offers.FirstOrDefault());
+        bookingItem = _mapper.Map<OrderItem>(roomDetailsResponse.Item.Offers.FirstOrDefault()?.Commission);
+        bookingItem = _mapper.Map<OrderItem>(roomDetailsResponse.Item.Offers.FirstOrDefault()?.Price);
+
+        var guestItem = _mapper.Map<Guest>(bookingUserRequest.HotelBookingRequest.Guests.FirstOrDefault());
+        guestItem = _mapper.Map<Guest>(bookingUserRequest.HotelBookingRequest.Guests.FirstOrDefault()?.Name);
+        guestItem = _mapper.Map<Guest>(bookingUserRequest.HotelBookingRequest.Guests.FirstOrDefault()?.Contact);
+        guestItem = _mapper.Map<Guest>(bookingUserRequest.HotelBookingRequest.Payments.FirstOrDefault());
+
+
         // TODO: Store the reservation in DB
+
+
 
         throw new NotImplementedException();
     }
@@ -87,6 +107,7 @@ public class AmadeusApiHotelBookingServiceProvider : IAmadeusApiHotelBookingServ
         }
 
         // Check the response before processing - Debugging purpose
+
         //var checkResponse = 
         //    await response.Content.ReadAsStringAsync();
         

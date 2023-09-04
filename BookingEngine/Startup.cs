@@ -171,14 +171,14 @@ namespace BookingEngine
                 c.SwaggerEndpoint("/swagger/v1/swagger.json", "Amadeus Hotels API Integration");
             });
 
-            app.UseRouting();
+            app.UseRouting();           
 
             app.UseAuthentication();
 
             app.UseAuthorization();
 
             app.UseSession();
-
+            
             app.UseEndpoints(endpoints =>
             {
                 endpoints.MapControllers();

@@ -9,7 +9,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.Booking;
-using AssociatedRecord = BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.Booking.AssociatedRecord;
 
 namespace BookingEngine.BusinessLogic.Mapping
 {
@@ -60,6 +59,41 @@ namespace BookingEngine.BusinessLogic.Mapping
                 .ForMember(dest => dest.OriginSystemCode, opt => opt.MapFrom(src => src.OriginSystemCode))
                 .ForMember(dest => dest.Reference, opt => opt.MapFrom(src => src.Reference));
 
+
+            CreateMap<AmadeusApiHotelItem, OrderItem>()
+                .ForMember(dest => dest.HotelId, opt => opt.MapFrom(src => src.HotelId))
+                .ForMember(dest => dest.HotelName, opt => opt.MapFrom(src => src.Name))
+                .ForMember(dest => dest.HotelCityCode, opt => opt.MapFrom(src => src.CityCode));
+
+            CreateMap<AmadeusApiOfferItem, OrderItem>()
+                .ForMember(dest => dest.OfferId, opt => opt.MapFrom(src => src.Id))
+                .ForMember(dest => dest.CheckInDate, opt => opt.MapFrom(src => src.CheckInDate))
+                .ForMember(dest => dest.CheckOutDate, opt => opt.MapFrom(src => src.CheckOutDate))
+                .ForMember(dest => dest.RoomQuantity, opt => opt.MapFrom(src => src.RoomQuantity))
+                .ForMember(dest => dest.BoardType, opt => opt.MapFrom(src => src.BoardType));
+
+            CreateMap<CommissionItem, OrderItem>()
+                .ForMember(dest => dest.CommisionPercentage, opt => opt.MapFrom(src => src.Percentage))
+                .ForMember(dest => dest.CommisionAmount, opt => opt.MapFrom(src => src.Amount));
+
+            CreateMap<PriceItem, OrderItem>()
+                .ForMember(dest => dest.TotalPrice, opt => opt.MapFrom(src => src.Total))
+                .ForMember(dest => dest.Currency, opt => opt.MapFrom(src => src.Currency));
+
+            CreateMap<StakeHolder, Guest>()
+                .ForMember(dest => dest.UserId, opt => opt.MapFrom(src => src.Id));
+
+            CreateMap<NameItem, Guest>()
+                .ForMember(dest => dest.Title, opt => opt.MapFrom(src => src.Title))
+                .ForMember(dest => dest.FirstName, opt => opt.MapFrom(src => src.FirstName))
+                .ForMember(dest => dest.LastName, opt => opt.MapFrom(src => src.LastName));
+
+            CreateMap<Contact, Guest>()
+                .ForMember(dest => dest.Phone, opt => opt.MapFrom(src => src.Phone))
+                .ForMember(dest => dest.Email, opt => opt.MapFrom(src => src.Email));
+
+            CreateMap<PaymentItem, Guest>()
+                .ForMember(dest => dest.PaymentMethod, opt => opt.MapFrom(src => src.Method));
         }
     }
 }

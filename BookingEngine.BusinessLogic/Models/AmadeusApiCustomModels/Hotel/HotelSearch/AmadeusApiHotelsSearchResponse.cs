@@ -52,11 +52,11 @@ namespace BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.HotelS
         public PriceItem Price { get; set; }
     }
 
-    public class PriceItem
-    {
-        public float Total { get; set; }
-        public string Currency { get; set; }
-    }
+    //public class PriceItem
+    //{
+    //    public float Total { get; set; }
+    //    public string Currency { get; set; }
+    //}
 
     public class DescriptionItem
     {

@@ -1,6 +1,7 @@
 ﻿using BookingEngine.BusinessLogic.Models;
 using BookingEngine.BusinessLogic.Services.Interfaces;
 using BookingEngine.Helpers;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using System.Net;
@@ -9,6 +10,7 @@ using AutoMapper;
 using BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels;
 using BookingEngine.Entities.Models;
 using Newtonsoft.Json;
+using BookingEngine.Entities.Models.Authentication;
 
 namespace BookingEngine.Controllers
 {
@@ -167,6 +169,7 @@ namespace BookingEngine.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(void))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status502BadGateway)]
+        [Authorize(Roles = UserRoles.User)]
         public async Task<ActionResult<RoomDetailsAmadeusFetchModel>> RoomDetails(string offerId, CancellationToken cancellationToken)
         {
             try
@@ -222,6 +225,7 @@ namespace BookingEngine.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(void))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status502BadGateway)]
+        [Authorize(Roles = UserRoles.User)]
         public async Task<ActionResult<HotelBookingAmadeusFetchModel>> Booking([FromBody] HotelBookingUserRequest hotelBookingUserRequest, CancellationToken cancellationToken)
         {
             
@@ -237,10 +241,13 @@ namespace BookingEngine.Controllers
                 var userEmail = User.FindFirstValue(ClaimTypes.Email);
 
 
-           
 
-                DateTime checkInDate = DateTime.Parse(HttpContext.Session.GetString("CheckInDate"));
-                DateTime checkOutDate = DateTime.Parse(HttpContext.Session.GetString("CheckOutDate"));
+
+                //DateTime checkInDate = DateTime.Parse(HttpContext.Session.GetString("CheckInDate"));
+                //DateTime checkOutDate = DateTime.Parse(HttpContext.Session.GetString("CheckOutDate"));
+                DateTime checkInDate = DateTime.Now;
+                DateTime checkOutDate = DateTime.Now;
+
                 // retrive hotel and offer data from session
                 var roomDetailsResponse = HttpContext.Session.GetObject<RoomDetailsAmadeusFetchModel>("RoomDetailsResponse");
 
@@ -372,6 +379,7 @@ namespace BookingEngine.Controllers
     {
         public static void SetObject(this ISession session, string key, object value)
         {
+            var obj = JsonConvert.SerializeObject(value);
             session.SetString(key, JsonConvert.SerializeObject(value));
         }
 
