@@ -279,7 +279,6 @@ namespace BookingEngine.Controllers
             }
         }
 
-
         private void ValidateAndSanitazeHotelsSearchRequest(HotelsSearchUserRequest hotelsSearchRequest)
         {
             if (String.IsNullOrEmpty(hotelsSearchRequest.CityCode))
@@ -350,6 +349,7 @@ namespace BookingEngine.Controllers
             //}
         }
 
+        [NonAction]
         public void AddToCache(RoomDetailsAmadeusFetchModel response)
         {
             var options = new MemoryCacheEntryOptions
@@ -363,6 +363,7 @@ namespace BookingEngine.Controllers
             _cache.Set<RoomDetailsAmadeusFetchModel>(KEY, response, options);
         }
 
+        [NonAction]
         public RoomDetailsAmadeusFetchModel GetCachedModel()
         {
             RoomDetailsAmadeusFetchModel model = null;

@@ -58,11 +58,11 @@ namespace BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.HotelS
     //    public string Currency { get; set; }
     //}
 
-    public class DescriptionItem
-    {
-        public string? Lang { get; set; }
-        public string? Text { get; set; }
-    }
+    //public class DescriptionItem
+    //{
+    //    public string? Lang { get; set; }
+    //    public string? Text { get; set; }
+    //}
 
     public class DistanceItem
     {

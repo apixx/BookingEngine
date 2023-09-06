@@ -75,7 +75,7 @@ namespace BookingEngine.BusinessLogic.Services
 
                 if(hasMoreItems)
                 {
-                    // nextAmadeusHotelsResponse = await FetchNextAmadeusHotels(currentHotelsResponse.Meta.Links.Next, cancellationToken);
+                    var nextAmadeusHotelsResponse = await FetchNextAmadeusHotels(currentHotelsResponse.Meta.Links.Next, cancellationToken);
                     nextItemsLink = currentHotelsResponse.Meta.Links.Next;
 
                     currentHotelsResponse = await FetchNextAmadeusHotels(currentHotelsResponse.Meta.Links.Next, cancellationToken);
