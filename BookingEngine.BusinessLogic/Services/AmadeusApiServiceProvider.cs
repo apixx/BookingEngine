@@ -25,10 +25,9 @@ namespace BookingEngine.BusinessLogic.Services
         }
 
 
-        public async Task<HotelsSearchAmadeusFetchModel> FetchAmadeusHotels(HotelsSearchUserRequest hotelsSearchRequest, CancellationToken cancellationToken)
+        public async Task<HotelByCitySearchResponse> FetchHotelsByCity(HotelByCitySearchRequest request, CancellationToken cancellationToken)
         {
-            HotelsSearchAmadeusFetchModel amadeusFetchModel = new HotelsSearchAmadeusFetchModel();
-            amadeusFetchModel.Items = new List<AmadeusApiHotelsSearchResponseItem>();
+            //HotelByCitySearchResponse amadeusFetchModel = new HotelByCitySearchResponse();
 
             string tokenString = await _amadeusTokenService.GetAmadeusToken(cancellationToken);
 
@@ -36,62 +35,62 @@ namespace BookingEngine.BusinessLogic.Services
             _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenString);
 
             // Request to Amadeus API is made in a way that Amadeus API returns maximum possible number of items it can (it seems that limit is 100 items per request)
-            var requestHotelsModel = new AmadeusApiHotelsSearchRequest(hotelsSearchRequest.CityCode, hotelsSearchRequest.CheckInDate, hotelsSearchRequest.CheckOutDate);
+            //var requestHotelsModel = new AmadeusApiHotelsSearchRequest(hotelsSearchRequest.CityCode, hotelsSearchRequest.CheckInDate, hotelsSearchRequest.CheckOutDate);
 
             // Flag - if our user requests certain page, all preceeding data should be fetched so they can be stored in db
-            int minimumItemsToReturn = hotelsSearchRequest.PageSize * (hotelsSearchRequest.PageOffset + 1);
+            //int minimumItemsToReturn = request.PageSize * (request.PageOffset + 1);
             int currentItemsReturnedCount;
 
-            var urlParams = await requestHotelsModel.ToUrlParamsString();
+            var urlParams = await request.ToUrlParamsString();
 
-            HttpResponseMessage response = await _httpClient.GetAsync("/v2/shopping/hotel-offers" + "?" + urlParams, cancellationToken);
+            HttpResponseMessage response = await _httpClient.GetAsync("/v1/reference-data/locations/hotels/by-city" + "?" + urlParams, cancellationToken);
 
             if (response.StatusCode == HttpStatusCode.BadRequest)
             {
                 var errors =
-                    await _processApiResponse.ProcessError<AmadeusApiErrorResponse>(response);
+                    await _processApiResponse.ProcessError<ErrorResponse>(response);
                 var firstError = errors.Errors.FirstOrDefault();
                 throw new HttpRequestException(firstError.Code + " - " + firstError.Title);
             }
 
             response.EnsureSuccessStatusCode();
-
             var currentHotelsResponse =
-                await _processApiResponse.ProcessResponse<AmadeusApiHotelsSearchResponse>(response);
+                await _processApiResponse.ProcessResponse<HotelByCitySearchResponse>(response);
             _logger.LogInformation("Successful in first request from Amadeus API");
 
-            amadeusFetchModel.Items.AddRange(currentHotelsResponse.Data);
+            currentItemsReturnedCount = currentHotelsResponse.Hotels.Count();
+            //amadeusFetchModel.Items.AddRange(currentHotelsResponse.Data);
 
-            currentItemsReturnedCount = amadeusFetchModel.Items.Count;
+            //currentItemsReturnedCount = amadeusFetchModel.Items.Count;
 
-            int iterationCount = 1;
-            bool hasMoreItems = currentHotelsResponse.Meta != null && currentHotelsResponse.Meta.Links != null && !String.IsNullOrEmpty(currentHotelsResponse.Meta.Links.Next);
-            string nextItemsLink = hasMoreItems ? currentHotelsResponse.Meta.Links.Next : null;
+            //int iterationCount = 1;
+            //bool hasMoreItems = currentHotelsResponse.Meta != null && currentHotelsResponse.Meta.Links != null && !String.IsNullOrEmpty(currentHotelsResponse.Meta.Links.Next);
+            //string nextItemsLink = hasMoreItems ? currentHotelsResponse.Meta.Links.Next : null;
 
-            while(currentItemsReturnedCount < minimumItemsToReturn && hasMoreItems)
-            {
-                nextItemsLink = null;
-                hasMoreItems = currentHotelsResponse.Meta != null && currentHotelsResponse.Meta.Links != null && !String.IsNullOrEmpty(currentHotelsResponse.Meta.Links.Next);
+            //while(currentItemsReturnedCount < minimumItemsToReturn && hasMoreItems)
+            //{
+            //    nextItemsLink = null;
+            //    hasMoreItems = currentHotelsResponse.Meta != null && currentHotelsResponse.Meta.Links != null && !String.IsNullOrEmpty(currentHotelsResponse.Meta.Links.Next);
 
-                if(hasMoreItems)
-                {
-                    var nextAmadeusHotelsResponse = await FetchNextAmadeusHotels(currentHotelsResponse.Meta.Links.Next, cancellationToken);
-                    nextItemsLink = currentHotelsResponse.Meta.Links.Next;
+            //    if(hasMoreItems)
+            //    {
+            //        var nextAmadeusHotelsResponse = await FetchNextAmadeusHotels(currentHotelsResponse.Meta.Links.Next, cancellationToken);
+            //        nextItemsLink = currentHotelsResponse.Meta.Links.Next;
 
-                    currentHotelsResponse = await FetchNextAmadeusHotels(currentHotelsResponse.Meta.Links.Next, cancellationToken);
+            //        currentHotelsResponse = await FetchNextAmadeusHotels(currentHotelsResponse.Meta.Links.Next, cancellationToken);
 
-                    _logger.LogInformation("Iteration count for getting next items: " + iterationCount);
-                    iterationCount++;
+            //        _logger.LogInformation("Iteration count for getting next items: " + iterationCount);
+            //        iterationCount++;
 
-                    amadeusFetchModel.Items.AddRange(currentHotelsResponse.Data);
-                }
+            //        amadeusFetchModel.Items.AddRange(currentHotelsResponse.Data);
+            //    }
 
-                currentItemsReturnedCount = amadeusFetchModel.Items.Count;
-            }
+            //    currentItemsReturnedCount = amadeusFetchModel.Items.Count;
+            //}
 
             _logger.LogInformation("Succcessful in getting data from Amadeus API. Returned Search Hotels items: " + currentItemsReturnedCount);
-            amadeusFetchModel.nextItemsUrl = nextItemsLink;
-            return amadeusFetchModel;
+            //amadeusFetchModel.nextItemsUrl = nextItemsLink;
+            return currentHotelsResponse;
             
         }
 

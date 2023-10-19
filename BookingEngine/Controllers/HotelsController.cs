@@ -60,64 +60,64 @@ namespace BookingEngine.Controllers
         /// <response code="400">Bad request with invalid parameters</response>
         /// <response code="500">Unexpected internal error</response>
         /// <response code="502">Problem retrieving Amadeus Hotels information from Amadeus API</response>
-        [HttpGet]
-        [Route("search")]
-        [Produces("application/json")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HotelsSearchResponse))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(void))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [ProducesResponseType(StatusCodes.Status502BadGateway)]
-        public async Task<ActionResult<HotelsSearchResponse>> Search(string cityCode, DateTime checkInDate, DateTime checkOutDate, int adults, int pageSize, int pageOffset, CancellationToken cancellationToken)
-        {
-            try
-            {
-                HotelsSearchUserRequest hotelsSearchRequest = new HotelsSearchUserRequest(cityCode, checkInDate, checkOutDate, adults, pageSize, pageOffset);
-            ValidateAndSanitazeHotelsSearchRequest(hotelsSearchRequest);
+        //[HttpGet]
+        //[Route("search")]
+        //[Produces("application/json")]
+        //[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HotelsSearchResponse))]
+        //[ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(void))]
+        //[ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        //[ProducesResponseType(StatusCodes.Status502BadGateway)]
+        //public async Task<ActionResult<HotelsSearchResponse>> Search(string cityCode, DateTime checkInDate, DateTime checkOutDate, int adults, int pageSize, int pageOffset, CancellationToken cancellationToken)
+        //{
+        //    try
+        //    {
+        //        HotelsSearchUserRequest hotelsSearchRequest = new HotelsSearchUserRequest(cityCode, checkInDate, checkOutDate, adults, pageSize, pageOffset);
+        //    ValidateAndSanitazeHotelsSearchRequest(hotelsSearchRequest);
 
-            HotelsSearchResponse response;
+        //    HotelsSearchResponse response;
 
-            // Check the cache if same request already exists
-            bool isCacheHit = _cache.TryGetValue(hotelsSearchRequest.ToCacheKey(), out response);
+        //    // Check the cache if same request already exists
+        //    bool isCacheHit = _cache.TryGetValue(hotelsSearchRequest.ToCacheKey(), out response);
 
-            if (!isCacheHit)
-            {
-                _logger.LogInformation($"No cache hit. CityCode: {hotelsSearchRequest.CityCode}, " +
-                    $"CheckIn: {hotelsSearchRequest.CheckInDate}, CheckOut: {hotelsSearchRequest.CheckOutDate}, PageSize: {hotelsSearchRequest.PageSize}, PageOffset:{hotelsSearchRequest.PageOffset}");
+        //    if (!isCacheHit)
+        //    {
+        //        _logger.LogInformation($"No cache hit. CityCode: {hotelsSearchRequest.CityCode}, " +
+        //            $"CheckIn: {hotelsSearchRequest.CheckInDate}, CheckOut: {hotelsSearchRequest.CheckOutDate}, PageSize: {hotelsSearchRequest.PageSize}, PageOffset:{hotelsSearchRequest.PageOffset}");
 
-                response = await _hotelsSearchService.SearchHotels(hotelsSearchRequest, cancellationToken);
+        //        response = await _hotelsSearchService.SearchHotels(hotelsSearchRequest, cancellationToken);
 
-                var cacheEntryOptions = new MemoryCacheEntryOptions()
-                    .SetSize(1)
-                    .SetSlidingExpiration(TimeSpan.FromMinutes(2))
-                    // Remove from cache after this time, regardless of sliding expiration
-                    .SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
+        //        var cacheEntryOptions = new MemoryCacheEntryOptions()
+        //            .SetSize(1)
+        //            .SetSlidingExpiration(TimeSpan.FromMinutes(2))
+        //            // Remove from cache after this time, regardless of sliding expiration
+        //            .SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
 
-                _cache.Set(hotelsSearchRequest.ToCacheKey(), response, cacheEntryOptions);
-            }
-            else
-            {
-                _logger.LogInformation($"Cache hit for request. CityCode: {hotelsSearchRequest.CityCode}, " +
-                       $"CheckIn: {hotelsSearchRequest.CheckInDate}, CheckOut: { hotelsSearchRequest.CheckOutDate}, pageSize: {hotelsSearchRequest.PageSize}, pageOffset: {hotelsSearchRequest.PageOffset}");
-            }
+        //        _cache.Set(hotelsSearchRequest.ToCacheKey(), response, cacheEntryOptions);
+        //    }
+        //    else
+        //    {
+        //        _logger.LogInformation($"Cache hit for request. CityCode: {hotelsSearchRequest.CityCode}, " +
+        //               $"CheckIn: {hotelsSearchRequest.CheckInDate}, CheckOut: { hotelsSearchRequest.CheckOutDate}, pageSize: {hotelsSearchRequest.PageSize}, pageOffset: {hotelsSearchRequest.PageOffset}");
+        //    }
 
-            return Ok(response);
-            }
-            catch (ArgumentException argEx)
-            {
-                _logger.LogWarning(argEx, argEx.Message);
-                return StatusCode((int)HttpStatusCode.BadRequest, new { message = argEx.Message });
-            }
-            catch (HttpRequestException reqEx)
-            {
-                _logger.LogError(reqEx, "Cannot retrieve Amadeus Hotels information from Amadeus API.");
-                return StatusCode((int)HttpStatusCode.BadGateway, new { message = "Cannot retrieve Amadeus Hotels information from Amadeus API. Reason: " + reqEx.Message });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Internal error.");
-                return StatusCode((int)HttpStatusCode.InternalServerError, new { message = "Internal error." });
-            }
-        }
+        //    return Ok(response);
+        //    }
+        //    catch (ArgumentException argEx)
+        //    {
+        //        _logger.LogWarning(argEx, argEx.Message);
+        //        return StatusCode((int)HttpStatusCode.BadRequest, new { message = argEx.Message });
+        //    }
+        //    catch (HttpRequestException reqEx)
+        //    {
+        //        _logger.LogError(reqEx, "Cannot retrieve Amadeus Hotels information from Amadeus API.");
+        //        return StatusCode((int)HttpStatusCode.BadGateway, new { message = "Cannot retrieve Amadeus Hotels information from Amadeus API. Reason: " + reqEx.Message });
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        _logger.LogError(ex, "Internal error.");
+        //        return StatusCode((int)HttpStatusCode.InternalServerError, new { message = "Internal error." });
+        //    }
+        //}
 
         [HttpGet]
         [Route("search-rooms")]
@@ -279,7 +279,64 @@ namespace BookingEngine.Controllers
             }
         }
 
-        private void ValidateAndSanitazeHotelsSearchRequest(HotelsSearchUserRequest hotelsSearchRequest)
+        [HttpGet("by-city")]
+        [HttpPost]
+        public async Task<IActionResult> GetHotelsByCity([FromBody] HotelByCitySearchRequest request, CancellationToken cancellationToken)
+        {
+            try
+            {
+                HotelByCitySearchResponse response;
+                
+                ValidateAndSanitazeHotelsSearchRequest(request);
+
+                bool isCacheHit = _cache.TryGetValue(request.ToCacheKey(), out response);
+
+                //if (response == null || !response.Data.Any()) // Check if the result is empty
+                //{
+                //    return NotFound("No hotels found for the specified city.");
+                //}
+
+                if (!isCacheHit)
+                {
+                    _logger.LogInformation($"No cache hit. CityCode: {request.CityCode}, " +
+                        $"Radius: {request.Radius}, RadiusUnit: {request.RadiusUnit}, HotelSource: {request.HotelSource}");
+
+                    response = await _hotelsSearchService.SearchHotels(request, cancellationToken);
+                        
+                    var cacheEntryOptions = new MemoryCacheEntryOptions()
+                        .SetSize(1)
+                        .SetSlidingExpiration(TimeSpan.FromMinutes(2))
+                        // Remove from cache after this time, regardless of sliding expiration
+                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
+
+                    _cache.Set(request.ToCacheKey(), response, cacheEntryOptions);
+                }
+                else
+                {
+                    _logger.LogInformation($"Cache hit for request. CityCode: {request.CityCode}, " +
+                        $"Radius: {request.Radius}, RadiusUnit: {request.RadiusUnit}, HotelSource: {request.HotelSource}");
+                }
+
+                return Ok(response);
+            }
+            catch (ArgumentException argEx)
+            {
+                _logger.LogWarning(argEx, argEx.Message);
+                return StatusCode((int)HttpStatusCode.BadRequest, new { message = argEx.Message });
+            }
+            catch (HttpRequestException reqEx)
+            {
+                _logger.LogError(reqEx, "Cannot retrieve Amadeus Hotels information from Amadeus API.");
+                return StatusCode((int)HttpStatusCode.BadGateway, new { message = "Cannot retrieve Amadeus Hotels information from Amadeus API. Reason: " + reqEx.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Internal error.");
+                return StatusCode((int)HttpStatusCode.InternalServerError, new { message = "Internal error." });
+            }
+        }
+
+        private void ValidateAndSanitazeHotelsSearchRequest(HotelByCitySearchRequest hotelsSearchRequest)
         {
             if (String.IsNullOrEmpty(hotelsSearchRequest.CityCode))
             {
@@ -289,7 +346,7 @@ namespace BookingEngine.Controllers
             {
                 throw new ArgumentException("City code must have three letters.");
             }
-            if (hotelsSearchRequest.CheckInDate.Date < DateTime.Now.Date)
+            if (hotelsSearchRequest.Radius)
             {
                 throw new ArgumentException("Check-in date can not be in past.");
             }

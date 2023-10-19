@@ -15,6 +15,6 @@ namespace BookingEngine.BusinessLogic.Services.Interfaces
         /// <param name="hotelsSearchRequest"></param>
         /// <param name="cancellationToken"></param>
         /// <returns>HotelsSearchAmadeusFetchModel - requested items and nextItemsUrl with url from Amadeus Api to get next items</returns>
-        Task<HotelsSearchResponse> SearchHotels(HotelsSearchUserRequest hotelsSearchRequest, CancellationToken cancellationToken);
+        Task<HotelByCitySearchResponse> SearchHotels(HotelByCitySearchRequest hotelsSearchRequest, CancellationToken cancellationToken);
     }
 }
