@@ -32,9 +32,9 @@ namespace BookingEngine.BusinessLogic.Services
         }
 
         
-        public async Task<HotelByCitySearchResponse> SearchHotels(HotelByCitySearchRequest request, CancellationToken cancellationToken)
+        public async Task<HotelOffersResponse> SearchHotels(HotelSearchRequestModel request, CancellationToken cancellationToken)
         {
-            var response = new HotelByCitySearchResponse();
+            var response = new HotelOffersResponse();
 
             //var tuple = await _searchRequestRepository.GetTupleWithItemsCountAsync(request.CityCode,
             //                                  request.CheckInDate, request.CheckOutDate, true);
@@ -104,7 +104,28 @@ namespace BookingEngine.BusinessLogic.Services
             // Amadeus Api problem with pagination and next link, fetch from beggining - commonAmadeusNextLinkError
             //if (searchRequestInDb == null || commonAmadeusNextLinkError)
             //{
-            var fetchedHotels = await _amadeusApiServiceProvider.FetchHotelsByCity(request, cancellationToken);
+
+
+            var hotelsData = await _amadeusApiServiceProvider.FetchHotelsByCity(_mapper.Map<HotelSearchRequest>(request), cancellationToken);
+            
+            string hotelIds = String.Empty;
+            HotelOffersRequest offersRequest = _mapper.Map<HotelOffersRequest>(request);
+            HotelOffersResponse hotelOffers = null;
+            if(hotelsData.Data.Count() > 0)
+            {
+                List<string> hotelIdsList = new List<string>();
+
+                foreach (var hotel in hotelsData.Data.Take(100))
+                {
+                    hotelIdsList.Add(hotel.HotelId);
+                }
+
+                offersRequest.HotelIds = string.Join(",", hotelIdsList);
+
+                hotelOffers = await _amadeusApiServiceProvider.FetchHotelOffers(offersRequest, cancellationToken);
+
+                hotelOffers.Data.Where(x => x.Available);
+            }
 
             //var searchRequest = _mapper.Map<SearchRequest>(request);
             //// NextItemsLink that is stored to db is fetched from Amadeus Api Response
@@ -125,8 +146,7 @@ namespace BookingEngine.BusinessLogic.Services
             //return response;
             //}
 
-            response.Hotels = fetchedHotels.Hotels;
-            response.Meta = fetchedHotels.Meta;
+            response = hotelOffers;
             return response;
         }
 

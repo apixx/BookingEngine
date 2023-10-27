@@ -25,7 +25,7 @@ namespace BookingEngine.BusinessLogic.Services
         }
 
 
-        public async Task<HotelByCitySearchResponse> FetchHotelsByCity(HotelByCitySearchRequest request, CancellationToken cancellationToken)
+        public async Task<HotelByCitySearchResponse> FetchHotelsByCity(HotelSearchRequest request, CancellationToken cancellationToken)
         {
             //HotelByCitySearchResponse amadeusFetchModel = new HotelByCitySearchResponse();
 
@@ -39,7 +39,7 @@ namespace BookingEngine.BusinessLogic.Services
 
             // Flag - if our user requests certain page, all preceeding data should be fetched so they can be stored in db
             //int minimumItemsToReturn = request.PageSize * (request.PageOffset + 1);
-            int currentItemsReturnedCount;
+            int? currentItemsReturnedCount;
 
             var urlParams = await request.ToUrlParamsString();
 
@@ -58,7 +58,7 @@ namespace BookingEngine.BusinessLogic.Services
                 await _processApiResponse.ProcessResponse<HotelByCitySearchResponse>(response);
             _logger.LogInformation("Successful in first request from Amadeus API");
 
-            currentItemsReturnedCount = currentHotelsResponse.Hotels.Count();
+            currentItemsReturnedCount = currentHotelsResponse?.Data?.Count();
             //amadeusFetchModel.Items.AddRange(currentHotelsResponse.Data);
 
             //currentItemsReturnedCount = amadeusFetchModel.Items.Count;
@@ -87,13 +87,46 @@ namespace BookingEngine.BusinessLogic.Services
 
             //    currentItemsReturnedCount = amadeusFetchModel.Items.Count;
             //}
-
-            _logger.LogInformation("Succcessful in getting data from Amadeus API. Returned Search Hotels items: " + currentItemsReturnedCount);
+            var hotelCount = currentItemsReturnedCount == null ? 0 : currentItemsReturnedCount;
+            _logger.LogInformation($"Succcessful in getting data from Amadeus API. Returned Search Hotels items: {hotelCount}");
             //amadeusFetchModel.nextItemsUrl = nextItemsLink;
             return currentHotelsResponse;
             
         }
+        public async Task<HotelOffersResponse> FetchHotelOffers(HotelOffersRequest request, CancellationToken cancellationToken)
+        {
+            string tokenString = await _amadeusTokenService.GetAmadeusToken(cancellationToken);
 
+            _httpClient.DefaultRequestHeaders.Add("Accept", MediaTypeNames.Application.Json);
+            _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", tokenString);
+
+            int? currentItemsReturnedCount;
+
+            var urlParams = await request.ToUrlParamsString();
+
+            HttpResponseMessage response = await _httpClient.GetAsync("/v3/shopping/hotel-offers" + "?" + urlParams, cancellationToken);
+
+            if (response.StatusCode == HttpStatusCode.BadRequest)
+            {
+                var errors =
+                    await _processApiResponse.ProcessError<ErrorResponse>(response);
+                var firstError = errors.Errors.FirstOrDefault();
+                throw new HttpRequestException(firstError.Code + " - " + firstError.Title);
+            }
+
+            response.EnsureSuccessStatusCode();
+            var currentHotelsResponse =
+                await _processApiResponse.ProcessResponse<HotelOffersResponse>(response);
+            _logger.LogInformation("Successful in first request from Amadeus API");
+
+            currentItemsReturnedCount = currentHotelsResponse?.Data?.Count();
+            
+            var hotelCount = currentItemsReturnedCount == null ? 0 : currentItemsReturnedCount;
+            _logger.LogInformation($"Succcessful in getting data from Amadeus API. Returned Search Hotels items: {hotelCount}");
+            
+            return currentHotelsResponse;
+
+        }
 
         /// <summary>
         /// Returns next items from link that was stored in db for search request. Keeps getting recursively until at least "itemsToFetch" are fetched 

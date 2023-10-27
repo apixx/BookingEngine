@@ -14,6 +14,7 @@ namespace BookingEngine.BusinessLogic.Mapping
 {
     public class MappingProfile : Profile
     {
+
         public MappingProfile()
         {
             CreateMap<HotelsSearchUserRequest, SearchRequest>();
@@ -30,10 +31,7 @@ namespace BookingEngine.BusinessLogic.Mapping
                     opt => opt.MapFrom(src => src.Hotel.HotelDistance.Distance))
                 .ForMember(dest => dest.Hotel, opt => opt.Ignore());
 
-            CreateMap<AmadeusApiHotelItem, Hotel>()
-                .ForMember(dest =>
-                    dest.Description,
-                    opt => opt.MapFrom(src => src.Description.Text));
+            CreateMap<AmadeusApiHotelItem, HotelData>();
 
             CreateMap<SearchRequestHotel, HotelSearchItemResponse>()
                 .ForMember(dest =>
@@ -94,6 +92,19 @@ namespace BookingEngine.BusinessLogic.Mapping
 
             CreateMap<PaymentItem, Guest>()
                 .ForMember(dest => dest.PaymentMethod, opt => opt.MapFrom(src => src.Method));
+
+            //check the mapper
+            CreateMap<HotelSearchRequest, HotelSearchRequestModel>()
+                .ForMember(dest => dest.CheckInDate, opt => opt.Ignore())
+                .ForMember(dest => dest.CheckOutDate, opt => opt.Ignore())
+                .ForMember(dest => dest.Adults, opt => opt.Ignore())
+                .ReverseMap();
+
+            CreateMap<HotelSearchRequestModel, HotelOffersRequest>()
+                .ForMember(dest => dest.HotelIds, opt => opt.Ignore())
+                .ForMember(dest => dest.Adults, opt => opt.MapFrom(src => src.Adults))
+                .ForMember(dest => dest.CheckInDate, opt => opt.MapFrom(src => src.CheckInDate))
+                .ForMember(dest => dest.CheckOutDate, opt => opt.MapFrom(src => src.CheckOutDate));
         }
     }
 }

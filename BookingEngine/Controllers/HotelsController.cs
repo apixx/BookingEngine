@@ -279,13 +279,12 @@ namespace BookingEngine.Controllers
             }
         }
 
-        [HttpGet("by-city")]
-        [HttpPost]
-        public async Task<IActionResult> GetHotelsByCity([FromBody] HotelByCitySearchRequest request, CancellationToken cancellationToken)
+        [HttpGet("search")]
+        public async Task<IActionResult> GetHotelsByCity([FromQuery] HotelSearchRequestModel request, CancellationToken cancellationToken)
         {
             try
             {
-                HotelByCitySearchResponse response;
+                HotelOffersResponse response;
                 
                 ValidateAndSanitazeHotelsSearchRequest(request);
 
@@ -296,7 +295,7 @@ namespace BookingEngine.Controllers
                 //    return NotFound("No hotels found for the specified city.");
                 //}
 
-                if (!isCacheHit)
+                if (true)//!isCacheHit)
                 {
                     _logger.LogInformation($"No cache hit. CityCode: {request.CityCode}, " +
                         $"Radius: {request.Radius}, RadiusUnit: {request.RadiusUnit}, HotelSource: {request.HotelSource}");
@@ -336,7 +335,7 @@ namespace BookingEngine.Controllers
             }
         }
 
-        private void ValidateAndSanitazeHotelsSearchRequest(HotelByCitySearchRequest hotelsSearchRequest)
+        private void ValidateAndSanitazeHotelsSearchRequest(HotelSearchRequestModel hotelsSearchRequest)
         {
             if (String.IsNullOrEmpty(hotelsSearchRequest.CityCode))
             {
@@ -346,25 +345,25 @@ namespace BookingEngine.Controllers
             {
                 throw new ArgumentException("City code must have three letters.");
             }
-            if (hotelsSearchRequest.Radius)
-            {
-                throw new ArgumentException("Check-in date can not be in past.");
-            }
-            if (hotelsSearchRequest.CheckOutDate <= hotelsSearchRequest.CheckInDate.AddDays(1))
-            {
-                throw new ArgumentException("Check-out date must be at least one day after check-in date.");
-            }
-            if (hotelsSearchRequest.PageSize < 1 || hotelsSearchRequest.PageOffset < 0)
-            {
-                throw new ArgumentException("Invalid page size or page offset values.");
-            }
-            if (hotelsSearchRequest.PageSize > 100)
-            {
-                throw new ArgumentException("Maximum page size is 100.");
-            }
+            //if (hotelsSearchRequest.Radius)
+            //{
+            //    throw new ArgumentException("Check-in date can not be in past.");
+            //}
+            //if (hotelsSearchRequest.CheckOutDate <= hotelsSearchRequest.CheckInDate.AddDays(1))
+            //{
+            //    throw new ArgumentException("Check-out date must be at least one day after check-in date.");
+            //}
+            //if (hotelsSearchRequest.PageSize < 1 || hotelsSearchRequest.PageOffset < 0)
+            //{
+            //    throw new ArgumentException("Invalid page size or page offset values.");
+            //}
+            //if (hotelsSearchRequest.PageSize > 100)
+            //{
+            //    throw new ArgumentException("Maximum page size is 100.");
+            //}
 
-            hotelsSearchRequest.CheckInDate = hotelsSearchRequest.CheckInDate.Date;
-            hotelsSearchRequest.CheckOutDate = hotelsSearchRequest.CheckOutDate.Date;
+            //hotelsSearchRequest.CheckInDate = hotelsSearchRequest.CheckInDate.Date;
+            //hotelsSearchRequest.CheckOutDate = hotelsSearchRequest.CheckOutDate.Date;
         }
 
         private void ValidateAndSanitazeHotelRoomsSearchRequest(HotelRoomsUserRequest hotelRoomsSearchRequest)

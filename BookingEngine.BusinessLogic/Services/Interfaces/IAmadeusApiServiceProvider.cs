@@ -16,7 +16,7 @@ namespace BookingEngine.BusinessLogic.Services.Interfaces
         /// <param name="hotelsSearchRequest"></param>
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
-        Task<HotelByCitySearchResponse> FetchHotelsByCity(HotelByCitySearchRequest hotelsSearchRequest, CancellationToken cancellationToken);
+        Task<HotelByCitySearchResponse> FetchHotelsByCity(HotelSearchRequest hotelsSearchRequest, CancellationToken cancellationToken);
         /// <summary>
         /// Returns next items from link that was stored in db for search request. Keeps getting recursively until at least "itemsToFetch" are fetched 
         /// </summary>
@@ -25,5 +25,6 @@ namespace BookingEngine.BusinessLogic.Services.Interfaces
         /// <param name="cancellationToken"></param>
         /// <returns></returns>
         Task<HotelsSearchAmadeusFetchModel> FetchNextAmadeusHotelsRecursively(string url, int itemsToFetch, CancellationToken cancellationToken);
+        Task<HotelOffersResponse> FetchHotelOffers(HotelOffersRequest request, CancellationToken cancellationToken);
     }
 }
