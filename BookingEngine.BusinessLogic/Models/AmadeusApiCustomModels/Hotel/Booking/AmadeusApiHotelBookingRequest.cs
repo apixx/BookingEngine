@@ -118,7 +118,7 @@ namespace BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.Bookin
         public List<int> GuestIds { get; set; }
         [JsonPropertyName("paymentId")]
         public int PaymentId { get; set; }
-        [JsonPropertyName("Data")]
+        [JsonPropertyName("specialRequest")]
         public string SpecialRequest { get; set; }
     }
 
