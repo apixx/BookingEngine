@@ -129,7 +129,7 @@ namespace BookingEngine.Controllers
                 var token = new JwtSecurityToken(
                     issuer: _configuration["JWT:ValidIssuer"],
                     audience: _configuration["JWT:ValidAudience"],
-                    expires: DateTime.Now.AddHours(24),
+                    expires: DateTime.Now.AddHours(4),
                     claims: authClaims,
                     signingCredentials: new SigningCredentials(authLoginKey, SecurityAlgorithms.HmacSha256)
                     );

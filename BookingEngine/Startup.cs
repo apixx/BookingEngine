@@ -81,7 +81,11 @@ namespace BookingEngine
                     ValidateAudience = true,
                     ValidAudience = Configuration["JWT:ValidAudience"],
                     ValidIssuer = Configuration["JWT:ValidIssuer"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Secret"]))
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(Configuration["JWT:Secret"])),
+                    RequireExpirationTime = true,
+                    ValidateLifetime = true,
+                    ClockSkew = TimeSpan.Zero,
+                    // RoleClaimType = "roles" - this returns 403
                 };
             });
 
@@ -94,28 +98,27 @@ namespace BookingEngine
                 client.BaseAddress = new Uri("https://test.api.amadeus.com");
             });
 
-
             // Register the Swagger generator, defining 1 or more Swagger documents
             services.AddSwaggerGen(c =>
             {
                 c.SwaggerDoc("v1", new OpenApiInfo
                 {
+                    Title = "Amadeus Hotels API ",
                     Version = "v1",
-                    Title = "AmadeusHotels.API",
                     Description = "Amadeus Hotels API Integration by Angel Donev"
-
                 });
-                c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme
+
+                c.AddSecurityDefinition("Bearer Token", new OpenApiSecurityScheme
                 {
+                    Description = "JWT Authorization header using the Bearer scheme.",
                     Name = "Authorization",
-                    Type = SecuritySchemeType.ApiKey,
-                    Scheme = "Bearer",
-                    BearerFormat = "JWT",
                     In = ParameterLocation.Header,
-                    Description = "JWT Authorization header using the Bearer scheme."
+                    Type = SecuritySchemeType.Http,
+                    BearerFormat = "JWT",
+                    Scheme = "Bearer"
                 });
 
-                c.AddSecurityRequirement(new OpenApiSecurityRequirement
+                c.AddSecurityRequirement(new OpenApiSecurityRequirement()
                 {
                     {
                         new OpenApiSecurityScheme
@@ -123,21 +126,22 @@ namespace BookingEngine
                             Reference = new OpenApiReference
                             {
                                 Type = ReferenceType.SecurityScheme,
-                                Id = "Bearer"
-                            }
+                                Id = "Bearer Token"
+                            },
+                            Scheme = "oauth2",
+                            Name = "Bearer",
+                            In = ParameterLocation.Header,
+
                         },
-                        Array.Empty<string>()
+                        new List<string>()
                     }
                 });
-
+                
                 // Set the comments path for the Swagger JSON and UI.
                 var xmlFile = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
                 var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
                 c.IncludeXmlComments(xmlPath);
             });
-
-
-
 
             services.AddSingleton<MyMemoryCache>();
             services.AddScoped<IHotelsSearchService, HotelsSearchService>();
@@ -191,23 +195,13 @@ namespace BookingEngine
             if (env.IsDevelopment())
             {
                 app.UseSwagger();
-                app.UseSwaggerUI();
+                // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
+                // specifying the Swagger JSON endpoint.
+                app.UseSwaggerUI(options =>
+                {
+                    options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
+                });
             }
-
-            app.UseSwaggerUI(options =>
-            {
-                options.SwaggerEndpoint("/swagger/v1/swagger.json", "v1");
-                options.RoutePrefix = string.Empty;
-            });
-            //app.UseSwagger();
-
-            // Enable middleware to serve swagger-ui (HTML, JS, CSS, etc.),
-            // specifying the Swagger JSON endpoint.
-            //app.UseSwaggerUI(c =>
-            //{
-            //    //c.SwaggerEndpoint("../swagger/v1/swagger.json", "Amadeus Hotels API Integration");
-            //    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Amadeus Hotels API Integration");
-            //});
 
             app.UseRouting();
 

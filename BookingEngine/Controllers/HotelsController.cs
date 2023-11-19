@@ -11,6 +11,7 @@ using BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels;
 using BookingEngine.Entities.Models;
 using Newtonsoft.Json;
 using BookingEngine.Entities.Models.Authentication;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 
 namespace BookingEngine.Controllers
 {
@@ -225,7 +226,8 @@ namespace BookingEngine.Controllers
         [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(void))]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status502BadGateway)]
-        [Authorize(Roles = UserRoles.User)]
+        //[Authorize(Roles = UserRoles.User)]
+        [Authorize]
         public async Task<ActionResult<HotelBookingAmadeusFetchModel>> Booking([FromBody] HotelBookingUserRequest hotelBookingUserRequest, CancellationToken cancellationToken)
         {
             
@@ -252,7 +254,7 @@ namespace BookingEngine.Controllers
                 var roomDetailsResponse = HttpContext.Session.GetObject<RoomDetailsAmadeusFetchModel>("RoomDetailsResponse");
 
                 // TODO: store in db data from the previous action (RoomDetails)
-                await _bookingService.CompleteBooking(hotelBookingUserRequest, roomDetailsResponse, response, checkInDate, checkOutDate, cancellationToken);
+                //await _bookingService.CompleteBooking(hotelBookingUserRequest, roomDetailsResponse, response, checkInDate, checkOutDate, cancellationToken);
 
                 // TODO: save user's reservation to DB
             
@@ -279,7 +281,9 @@ namespace BookingEngine.Controllers
             }
         }
 
-        [HttpGet("search")]
+        [HttpGet]
+        [Route("search")]
+        [Authorize(Roles = UserRoles.User)]
         public async Task<IActionResult> GetHotelsByCity([FromQuery] HotelSearchRequestModel request, CancellationToken cancellationToken)
         {
             try
