@@ -17,6 +17,7 @@ using Microsoft.OpenApi.Models;
 using System.Reflection;
 using System.Text;
 using Microsoft.Extensions.Options;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 
 namespace BookingEngine
 {
@@ -60,7 +61,10 @@ namespace BookingEngine
             // for identity
             services.AddIdentity<ApplicationUser, IdentityRole>()
                 .AddEntityFrameworkStores<DatabaseContext>()
+                .AddRoles<IdentityRole>()
                 .AddDefaultTokenProviders();
+            //services.AddTransient<IUserStore<ApplicationUser>, UserStore<ApplicationUser>>();
+            //services.AddTransient<UserManager<ApplicationUser>>();
 
             // for authentication
             services.AddAuthentication(options =>
@@ -144,13 +148,12 @@ namespace BookingEngine
             });
 
             services.AddSingleton<MyMemoryCache>();
-            services.AddScoped<IHotelsSearchService, HotelsSearchService>();
-            services.AddScoped<IAmadeusApiHotelRoomsServiceProvider, AmadeusApiHotelRoomsServiceProvider>();
-            services.AddScoped<IAmadeusApiHotelBookingServiceProvider, AmadeusApiHotelBookingServiceProvider>();
+            services.AddScoped<IHotelsService, HotelsService>();
             services.AddScoped<IProcessApiResponse, ProcessApiResponse>();
             services.AddScoped<ISearchRequestRepository, SearchRequestRepository>();
             services.AddScoped<ISearchRequestHotelRepository, SearchRequestHotelRepository>();
             services.AddScoped<IHotelRepository, HotelRepository>();
+            services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 
             // dodadeno da se zastitime od cyclic reference koga se pravi serijalizicija vo json

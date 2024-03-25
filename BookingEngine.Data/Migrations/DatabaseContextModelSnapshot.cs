@@ -22,7 +22,7 @@ namespace BookingEngine.Data.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder, 1L, 1);
 
-            modelBuilder.Entity("BookingEngine.Entities.Models.AssociatedRecord", b =>
+            modelBuilder.Entity("BookingEngine.Entities.Models.AssociatedRecordItem", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -42,6 +42,8 @@ namespace BookingEngine.Data.Migrations
                         .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("OrderItemId");
 
                     b.ToTable("AssociatedRecords");
                 });
@@ -134,26 +136,64 @@ namespace BookingEngine.Data.Migrations
 
             modelBuilder.Entity("BookingEngine.Entities.Models.Order", b =>
                 {
-                    b.Property<int>("OrderId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OrderId"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
+
+                    b.Property<int>("Adults")
+                        .HasColumnType("int");
+
+                    b.Property<string>("BoardType")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("CheckInDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("CheckOutDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Currency")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime>("DateCreated")
                         .HasColumnType("datetime2");
 
+                    b.Property<string>("HotelCityCode")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HotelId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("HotelName")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("OfferId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<int>("OrderStatusId")
+                        .HasColumnType("int");
+
+                    b.Property<int>("RoomQuantity")
                         .HasColumnType("int");
 
                     b.Property<int>("SequenceNumber")
                         .HasColumnType("int");
 
+                    b.Property<float>("TotalPrice")
+                        .HasColumnType("real");
+
                     b.Property<string>("UserId")
                         .IsRequired()
                         .HasColumnType("nvarchar(450)");
 
-                    b.HasKey("OrderId");
+                    b.HasKey("Id");
 
                     b.HasIndex("OrderStatusId");
 
@@ -164,28 +204,20 @@ namespace BookingEngine.Data.Migrations
 
             modelBuilder.Entity("BookingEngine.Entities.Models.OrderItem", b =>
                 {
-                    b.Property<int>("OrderItemId")
+                    b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("int");
 
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("OrderItemId"), 1L, 1);
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"), 1L, 1);
 
-                    b.Property<string>("Id")
+                    b.Property<string>("BookingItemId")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("OrderId")
                         .HasColumnType("int");
 
-                    b.Property<string>("ProductItem")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<string>("ProviderConfirmationId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("SelfUri")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
@@ -193,7 +225,7 @@ namespace BookingEngine.Data.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.HasKey("OrderItemId");
+                    b.HasKey("Id");
 
                     b.HasIndex("OrderId");
 
@@ -215,6 +247,23 @@ namespace BookingEngine.Data.Migrations
                     b.HasKey("OrderStatusId");
 
                     b.ToTable("OrderStatus");
+
+                    b.HasData(
+                        new
+                        {
+                            OrderStatusId = 1,
+                            StatusValue = "CONFIRMED"
+                        },
+                        new
+                        {
+                            OrderStatusId = 2,
+                            StatusValue = "PENDING"
+                        },
+                        new
+                        {
+                            OrderStatusId = 3,
+                            StatusValue = "CANCELED"
+                        });
                 });
 
             modelBuilder.Entity("BookingEngine.Entities.Models.SearchRequest", b =>
@@ -433,6 +482,17 @@ namespace BookingEngine.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("BookingEngine.Entities.Models.AssociatedRecordItem", b =>
+                {
+                    b.HasOne("BookingEngine.Entities.Models.OrderItem", "OrderItem")
+                        .WithMany("AssociatedRecords")
+                        .HasForeignKey("OrderItemId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("OrderItem");
+                });
+
             modelBuilder.Entity("BookingEngine.Entities.Models.Order", b =>
                 {
                     b.HasOne("BookingEngine.Entities.Models.OrderStatus", "OrderStatus")
@@ -455,7 +515,7 @@ namespace BookingEngine.Data.Migrations
             modelBuilder.Entity("BookingEngine.Entities.Models.OrderItem", b =>
                 {
                     b.HasOne("BookingEngine.Entities.Models.Order", "Order")
-                        .WithMany()
+                        .WithMany("OrderItems")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
@@ -536,6 +596,16 @@ namespace BookingEngine.Data.Migrations
             modelBuilder.Entity("BookingEngine.Entities.Models.Hotel", b =>
                 {
                     b.Navigation("SearchRequestHotels");
+                });
+
+            modelBuilder.Entity("BookingEngine.Entities.Models.Order", b =>
+                {
+                    b.Navigation("OrderItems");
+                });
+
+            modelBuilder.Entity("BookingEngine.Entities.Models.OrderItem", b =>
+                {
+                    b.Navigation("AssociatedRecords");
                 });
 
             modelBuilder.Entity("BookingEngine.Entities.Models.SearchRequest", b =>

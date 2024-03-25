@@ -30,10 +30,12 @@ namespace BookingEngine.BusinessLogic.Models
         public int Adults { get; set; }
         public DateTime CheckInDate { get; set; }
         public DateTime CheckOutDate { get; set; }
+        [Range(1, 9)]
+        public int? RoomQuantity { get; set; }
 
         public string ToCacheKey()
         {
-            return String.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9}", this.CityCode, this.Radius, this.RadiusUnit, this.ChainCodes, this.Amenities, this.Ratings, this.HotelSource, this.Adults, this.CheckInDate, this.CheckOutDate);
+            return String.Format("{0},{1},{2},{3},{4},{5},{6},{7},{8},{9},{10}", this.CityCode, this.Radius, this.RadiusUnit, this.ChainCodes, this.Amenities, this.Ratings, this.HotelSource, this.Adults, this.CheckInDate, this.CheckOutDate, this.RoomQuantity);
         }
 
         public async Task<string> ToUrlParamsString()
@@ -140,10 +142,11 @@ namespace BookingEngine.BusinessLogic.Models
         public int Adults { get; set; }
         public DateTime CheckInDate { get; set; }
         public DateTime CheckOutDate { get; set; }
+        public int? RoomQuantity { get; set; }
 
         public string ToCacheKey()
         {
-            return String.Format("{0},{1},{2},{3}", this.HotelIds, this.Adults, this.CheckInDate, this.CheckOutDate);
+            return String.Format("{0},{1},{2},{3},{4}", this.HotelIds, this.Adults, this.CheckInDate, this.CheckOutDate, this.RoomQuantity);
         }
 
         public async Task<string> ToUrlParamsString()
@@ -154,6 +157,11 @@ namespace BookingEngine.BusinessLogic.Models
             urlParams.Add("adults", Adults.ToString());
             urlParams.Add("checkInDate", CheckInDate.ToString("yyyy-MM-dd"));
             urlParams.Add("checkOutDate", CheckOutDate.ToString("yyyy-MM-dd"));
+            
+            if(RoomQuantity != null && RoomQuantity.HasValue) 
+            { 
+                urlParams.Add("roomQuantity", RoomQuantity.ToString());
+            }
 
             using (HttpContent content = new FormUrlEncodedContent(urlParams))
             {

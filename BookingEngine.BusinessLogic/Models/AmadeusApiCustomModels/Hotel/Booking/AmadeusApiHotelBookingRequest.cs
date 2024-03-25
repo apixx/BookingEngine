@@ -1,15 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
+﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
-using System.Threading.Tasks;
-using BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.HotelSearch;
-using Microsoft.AspNetCore.Mvc;
 
 namespace BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.Booking
 {
+
     public class AmadeusApiHotelBookingRequest
     {
         [JsonPropertyName("Data")] 
@@ -19,27 +13,6 @@ namespace BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.Bookin
         {
             this.Data = data;
         }
-
-        //public AmadeusApiHotelBookingRequest(string offerId, List<StakeHolder> guests, List<PaymentItem> payments)
-        //{
-        //    Data = new AmadeusApiHotelBookingRequestItem();
-
-        //    Data.OfferId = offerId;
-        //    Data.Guests = guests;
-        //    Data.Payments = payments;
-        //}
-        //public string OfferId { get; set; }
-        //public List<StakeHolder> Guests { get; set; }
-        //public List<PaymentItem> Payments { get; set; }
-        //public List<Room>? Rooms { get; set; }
-
-        //HotelBookingUserRequest userRequest
-        //public AmadeusApiHotelBookingRequest(string offerId, List<StakeHolder> guests, List<PaymentItem> payments)
-        //{
-        //    OfferId = offerId;
-        //    Guests = guests;
-        //    Payments = payments;
-        //}
     }
 
     public class AmadeusApiHotelBookingRequestItem

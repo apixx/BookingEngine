@@ -18,7 +18,6 @@ namespace BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.Bookin
         public string Id { get; set; }
         public string ProviderConfirmationId { get; set; }
         public List<AssociatedRecord> AssociatedRecords { get; set; }
-        public string SelfUri { get; set; }
     }
 
     public class AssociatedRecord

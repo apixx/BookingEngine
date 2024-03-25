@@ -50,6 +50,7 @@ namespace BookingEngine.Data
             base.OnModelCreating(builder);
 
             builder.ApplyConfigurationsFromAssembly(typeof(DatabaseContext).Assembly);
+            builder.Seed();
         }
     }
 }

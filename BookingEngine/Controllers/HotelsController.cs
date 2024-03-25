@@ -5,13 +5,15 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using System.Net;
-using System.Security.Claims;
 using AutoMapper;
 using BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels;
-using BookingEngine.Entities.Models;
 using Newtonsoft.Json;
 using BookingEngine.Entities.Models.Authentication;
-using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
+using BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.Booking;
+using System.ComponentModel.DataAnnotations;
+using System.Text.RegularExpressions;
+using Microsoft.EntityFrameworkCore;
 
 namespace BookingEngine.Controllers
 {
@@ -20,265 +22,19 @@ namespace BookingEngine.Controllers
     public class HotelsController : ControllerBase
     {
         private readonly ILogger<HotelsController> _logger;
-        private readonly IHotelsSearchService _hotelsSearchService;
-        private readonly IAmadeusApiHotelRoomsServiceProvider _hotelRoomsService;
-        private readonly IAmadeusApiHotelBookingServiceProvider _bookingService;
+        private readonly IHotelsService _hotelsService;
         private readonly IMapper _mapper;
+        private readonly UserManager<ApplicationUser> _userManager;
         private MemoryCache _cache;
         private const string KEY = "user_cache";
 
-        public HotelsController(ILogger<HotelsController> logger, IHotelsSearchService hotelsSearchService, IAmadeusApiHotelRoomsServiceProvider hotelRoomsService, MyMemoryCache memoryCache, IAmadeusApiHotelBookingServiceProvider bookingService, IMapper mapper)
+        public HotelsController(ILogger<HotelsController> logger, IHotelsService hotelsService, MyMemoryCache memoryCache, UserManager<ApplicationUser> userManager, IMapper mapper)
         {
             _logger = logger;
-            _hotelsSearchService = hotelsSearchService;
-            _hotelRoomsService = hotelRoomsService;
+            _hotelsService = hotelsService;
             _cache = memoryCache.Cache;
-            _bookingService = bookingService;
+            _userManager = userManager;
             _mapper = mapper;
-        }
-
-        /// <summary>
-        ///  Returns data for given search request. Each request provides pagination parameters with limitation of 100 items per page.
-        ///  This endpoint fetches requested data from Amadeus Api service and stores them in the database with certain expiration time.
-        ///  For given combination of parameters for subsequent search requests with same combination of parameters, first chekcs cache memory,
-        ///  after that checks if there are enough items in database and then returns them from database.
-        ///  If there are some items in database, but not enough for given request, the rest is fetched recursively from stored NextItemsLink.
-        ///  After stored data is expired (parameter in appsetings), new search request is stored in database and fetches fresh set of data from Amadeus API
-        /// </summary>
-        /// <param name="cityCode"><para>Destination City Code (or Airport Code). In case of city code, the search will be done around the city center.<br /> 
-        /// Available codes can be found in <see href="https://www.iata.org/en/publications/directories/code-search/">IATA table codes</see> (3 chars IATA Code) <br /> 
-        /// Example: PAR</para></param>
-        /// <param name="checkInDate">check-in date of the stay (hotel local date). Format YYYY-MM-DD <br /> 
-        /// The lowest accepted value is the present date (no dates in the past)</param>
-        /// <param name="checkOutDate">check-out date of the stay (hotel local date). Format YYYY-MM-DD<br /> 
-        /// The lowest accepted value is checkInDate+1</param>
-        /// <param name="adults">Defines the number of adult guests.</param>
-        /// <param name="pageSize">Defines the number of items returned in response. Maximum value is 100</param>
-        /// <param name="pageOffset">Defines the page offset</param>
-        /// <param name="cancellationToken"></param>
-        /// <returns>HotelsSearchResponse</returns>
-        /// <response code="200">Model HotelsSearchResponse for requested page, with additional information about current page size and offset, and information if there is another page</response>
-        /// <response code="400">Bad request with invalid parameters</response>
-        /// <response code="500">Unexpected internal error</response>
-        /// <response code="502">Problem retrieving Amadeus Hotels information from Amadeus API</response>
-        //[HttpGet]
-        //[Route("search")]
-        //[Produces("application/json")]
-        //[ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HotelsSearchResponse))]
-        //[ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(void))]
-        //[ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        //[ProducesResponseType(StatusCodes.Status502BadGateway)]
-        //public async Task<ActionResult<HotelsSearchResponse>> Search(string cityCode, DateTime checkInDate, DateTime checkOutDate, int adults, int pageSize, int pageOffset, CancellationToken cancellationToken)
-        //{
-        //    try
-        //    {
-        //        HotelsSearchUserRequest hotelsSearchRequest = new HotelsSearchUserRequest(cityCode, checkInDate, checkOutDate, adults, pageSize, pageOffset);
-        //    ValidateAndSanitazeHotelsSearchRequest(hotelsSearchRequest);
-
-        //    HotelsSearchResponse response;
-
-        //    // Check the cache if same request already exists
-        //    bool isCacheHit = _cache.TryGetValue(hotelsSearchRequest.ToCacheKey(), out response);
-
-        //    if (!isCacheHit)
-        //    {
-        //        _logger.LogInformation($"No cache hit. CityCode: {hotelsSearchRequest.CityCode}, " +
-        //            $"CheckIn: {hotelsSearchRequest.CheckInDate}, CheckOut: {hotelsSearchRequest.CheckOutDate}, PageSize: {hotelsSearchRequest.PageSize}, PageOffset:{hotelsSearchRequest.PageOffset}");
-
-        //        response = await _hotelsSearchService.SearchHotels(hotelsSearchRequest, cancellationToken);
-
-        //        var cacheEntryOptions = new MemoryCacheEntryOptions()
-        //            .SetSize(1)
-        //            .SetSlidingExpiration(TimeSpan.FromMinutes(2))
-        //            // Remove from cache after this time, regardless of sliding expiration
-        //            .SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
-
-        //        _cache.Set(hotelsSearchRequest.ToCacheKey(), response, cacheEntryOptions);
-        //    }
-        //    else
-        //    {
-        //        _logger.LogInformation($"Cache hit for request. CityCode: {hotelsSearchRequest.CityCode}, " +
-        //               $"CheckIn: {hotelsSearchRequest.CheckInDate}, CheckOut: { hotelsSearchRequest.CheckOutDate}, pageSize: {hotelsSearchRequest.PageSize}, pageOffset: {hotelsSearchRequest.PageOffset}");
-        //    }
-
-        //    return Ok(response);
-        //    }
-        //    catch (ArgumentException argEx)
-        //    {
-        //        _logger.LogWarning(argEx, argEx.Message);
-        //        return StatusCode((int)HttpStatusCode.BadRequest, new { message = argEx.Message });
-        //    }
-        //    catch (HttpRequestException reqEx)
-        //    {
-        //        _logger.LogError(reqEx, "Cannot retrieve Amadeus Hotels information from Amadeus API.");
-        //        return StatusCode((int)HttpStatusCode.BadGateway, new { message = "Cannot retrieve Amadeus Hotels information from Amadeus API. Reason: " + reqEx.Message });
-        //    }
-        //    catch (Exception ex)
-        //    {
-        //        _logger.LogError(ex, "Internal error.");
-        //        return StatusCode((int)HttpStatusCode.InternalServerError, new { message = "Internal error." });
-        //    }
-        //}
-
-        [HttpGet]
-        [Route("search-rooms")]
-        [Produces("application/json")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HotelRoomsAmadeusFetchModel))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(void))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [ProducesResponseType(StatusCodes.Status502BadGateway)]
-        public async Task<ActionResult<HotelRoomsAmadeusFetchModel>> SearchRooms(string hotelId, DateTime checkInDate,
-            DateTime checkOutDate, int adults ,CancellationToken cancellationToken)
-        {
-            try
-            {
-                HotelRoomsUserRequest hotelRoomsRequest = new HotelRoomsUserRequest(hotelId, checkInDate, checkOutDate, adults);
-                ValidateAndSanitazeHotelRoomsSearchRequest(hotelRoomsRequest);
-
-                //HotelRoomsResponse response;
-                HotelRoomsAmadeusFetchModel response;
-
-                response = await _hotelRoomsService.FetchAmadeusHotelRooms(hotelRoomsRequest, cancellationToken);
-
-                HttpContext.Session.SetString("CheckInDate", checkInDate.ToString());
-                HttpContext.Session.SetString("CheckOutDate", checkOutDate.ToString());
-
-                return Ok(response);
-            }
-            catch (ArgumentException argEx)
-            {
-                _logger.LogWarning(argEx, argEx.Message);
-                return StatusCode((int)HttpStatusCode.BadRequest, new { message = argEx.Message });
-            }
-            catch (HttpRequestException reqEx)
-            {
-                _logger.LogError(reqEx, "Cannot retrieve Amadeus Hotels information from Amadeus API.");
-                return StatusCode((int)HttpStatusCode.BadGateway, new { message = "Cannot retrieve Amadeus Hotels information from Amadeus API. Reason: " + reqEx.Message });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Internal error.");
-                return StatusCode((int)HttpStatusCode.InternalServerError, new { message = "Internal error." });
-            }
-        }
-
-
-        [HttpGet]
-        [Route("room-details")]
-        [Produces("application/json")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(RoomDetailsAmadeusFetchModel))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(void))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [ProducesResponseType(StatusCodes.Status502BadGateway)]
-        [Authorize(Roles = UserRoles.User)]
-        public async Task<ActionResult<RoomDetailsAmadeusFetchModel>> RoomDetails(string offerId, CancellationToken cancellationToken)
-        {
-            try
-            {
-                RoomDetailsUserRequest roomsDetailsRequest = new RoomDetailsUserRequest(offerId);
-                ValidateAndSanitazeRoomDetailsSearchRequest(roomsDetailsRequest);
-
-                //HotelRoomsResponse response;
-                RoomDetailsAmadeusFetchModel response;
-
-                response = await _hotelRoomsService.FetchAmadeusRoomDetails(roomsDetailsRequest, cancellationToken);
-
-                // Add hotel and offer info to session, used in Booking action
-                HttpContext.Session.SetObject("RoomDetailsResponse", response);
-
-                
-
-                // _cache.Set(response.ToCacheKey(), response, cacheEntryOptions);
-
-                // AddToCache(response);
-
-                return Ok(response);
-
-                //return RedirectToAction("Booking", "Hotels", response);
-            }
-            catch (ArgumentException argEx)
-            {
-                _logger.LogWarning(argEx, argEx.Message);
-                return StatusCode((int)HttpStatusCode.BadRequest, new { message = argEx.Message });
-            }
-            catch (HttpRequestException reqEx)
-            {
-                _logger.LogError(reqEx, "Cannot retrieve Amadeus Room Details information from Amadeus API.");
-                return StatusCode((int)HttpStatusCode.BadGateway, new { message = "Cannot retrieve Amadeus Room Details information from Amadeus API. Reason: " + reqEx.Message });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Internal error.");
-                return StatusCode((int)HttpStatusCode.InternalServerError, new { message = "Internal error." });
-            }
-        }
-        
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="hotelBookingUserRequest"></param>
-        /// <param name="cancellationToken"></param>
-        /// <returns></returns>
-        [HttpPost]
-        [Route("booking")]
-        [Produces("application/json")]
-        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HotelBookingAmadeusFetchModel))]
-        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(void))]
-        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
-        [ProducesResponseType(StatusCodes.Status502BadGateway)]
-        //[Authorize(Roles = UserRoles.User)]
-        [Authorize]
-        public async Task<ActionResult<HotelBookingAmadeusFetchModel>> Booking([FromBody] HotelBookingUserRequest hotelBookingUserRequest, CancellationToken cancellationToken)
-        {
-            
-            try
-            {
-                HotelBookingUserRequest bookingUserRequest = new HotelBookingUserRequest(hotelBookingUserRequest.HotelBookingRequest);
-                
-                //ValidateAndSanitazeRoomDetailsSearchRequest(bookingUserRequest);
-
-                var response = await _bookingService.FetchAmadeusHotelBooking(bookingUserRequest, cancellationToken);
-
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                var userEmail = User.FindFirstValue(ClaimTypes.Email);
-
-
-
-
-                //DateTime checkInDate = DateTime.Parse(HttpContext.Session.GetString("CheckInDate"));
-                //DateTime checkOutDate = DateTime.Parse(HttpContext.Session.GetString("CheckOutDate"));
-                DateTime checkInDate = DateTime.Now;
-                DateTime checkOutDate = DateTime.Now;
-
-                // retrive hotel and offer data from session
-                var roomDetailsResponse = HttpContext.Session.GetObject<RoomDetailsAmadeusFetchModel>("RoomDetailsResponse");
-
-                // TODO: store in db data from the previous action (RoomDetails)
-                //await _bookingService.CompleteBooking(hotelBookingUserRequest, roomDetailsResponse, response, checkInDate, checkOutDate, cancellationToken);
-
-                // TODO: save user's reservation to DB
-            
-
-                var model = GetCachedModel;
-
-                
-                return Ok(response);
-            }
-            catch (ArgumentException argEx)
-            {
-                _logger.LogWarning(argEx, argEx.Message);
-                return StatusCode((int)HttpStatusCode.BadRequest, new { message = argEx.Message });
-            }
-            catch (HttpRequestException reqEx)
-            {
-                _logger.LogError(reqEx, "Cannot retrieve Amadeus Booking information from Amadeus API.");
-                return StatusCode((int)HttpStatusCode.BadGateway, new { message = "Cannot retrieve Amadeus Booking information from Amadeus API. Reason: " + reqEx.Message });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Internal error.");
-                return StatusCode((int)HttpStatusCode.InternalServerError, new { message = "Internal error." });
-            }
         }
 
         [HttpGet]
@@ -289,7 +45,7 @@ namespace BookingEngine.Controllers
             try
             {
                 HotelOffersResponse response;
-                
+
                 ValidateAndSanitazeHotelsSearchRequest(request);
 
                 bool isCacheHit = _cache.TryGetValue(request.ToCacheKey(), out response);
@@ -304,8 +60,8 @@ namespace BookingEngine.Controllers
                     _logger.LogInformation($"No cache hit. CityCode: {request.CityCode}, " +
                         $"Radius: {request.Radius}, RadiusUnit: {request.RadiusUnit}, HotelSource: {request.HotelSource}");
 
-                    response = await _hotelsSearchService.SearchHotels(request, cancellationToken);
-                        
+                    response = await _hotelsService.SearchHotels(request, cancellationToken);
+
                     var cacheEntryOptions = new MemoryCacheEntryOptions()
                         .SetSize(1)
                         .SetSlidingExpiration(TimeSpan.FromMinutes(2))
@@ -313,6 +69,7 @@ namespace BookingEngine.Controllers
                         .SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
 
                     _cache.Set(request.ToCacheKey(), response, cacheEntryOptions);
+                    HttpContext.Session.SetObject("HotelSearchResponse", response);
                 }
                 else
                 {
@@ -331,6 +88,64 @@ namespace BookingEngine.Controllers
             {
                 _logger.LogError(reqEx, "Cannot retrieve Amadeus Hotels information from Amadeus API.");
                 return StatusCode((int)HttpStatusCode.BadGateway, new { message = "Cannot retrieve Amadeus Hotels information from Amadeus API. Reason: " + reqEx.Message });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Internal error.");
+                return StatusCode((int)HttpStatusCode.InternalServerError, new { message = "Internal error." });
+            }
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="hotelBookingUserRequest"></param>
+        /// <param name="cancellationToken"></param>
+        /// <returns></returns>
+        [HttpPost]
+        [Route("booking")]
+        [Produces("application/json")]
+        [ProducesResponseType(StatusCodes.Status200OK, Type = typeof(HotelBookingAmadeusFetchModel))]
+        [ProducesResponseType(StatusCodes.Status400BadRequest, Type = typeof(void))]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
+        [ProducesResponseType(StatusCodes.Status502BadGateway)]
+        [Authorize(Roles = UserRoles.User)]
+        [Authorize]
+        public async Task<ActionResult<HotelBookingResultDTO>> Booking([FromBody] HotelBookingRequestDTO hotelBookingRequestDto, CancellationToken cancellationToken)
+        {
+            
+            try
+            {
+                ValidateAndSanitizeHotelBookingRequest(hotelBookingRequestDto);
+
+                var userId = _userManager.Users.Where(u => u.UserName.Contains(User.Identity.Name)).Select(u => u.Id).FirstOrDefault();
+
+                // retrive hotel and offer data from session
+                var offers = HttpContext.Session.GetObject<HotelOffersResponse>("HotelSearchResponse");
+
+                var bookingResult = await _hotelsService.ProcessHotelBookingAsync(hotelBookingRequestDto, offers, userId, cancellationToken);
+
+                return Ok(_mapper.Map<HotelBookingResultDTO>(bookingResult));
+            }
+            catch (ArgumentException argEx)
+            {
+                _logger.LogWarning(argEx, argEx.Message);
+                return StatusCode((int)HttpStatusCode.BadRequest, new { message = argEx.Message });
+            }
+            catch (HttpRequestException reqEx)
+            {
+                _logger.LogError(reqEx, "Cannot retrieve Amadeus Booking information from Amadeus API.");
+                return StatusCode((int)HttpStatusCode.BadGateway, new { message = "Cannot retrieve Amadeus Booking information from Amadeus API. Reason: " + reqEx.Message });
+            }
+            catch (DbUpdateException dbEx)
+            {
+                _logger.LogError(dbEx, "Database update failed.");
+                return StatusCode((int)HttpStatusCode.InternalServerError, new { message = "Database update failed." });
+            }
+            catch (InvalidOperationException invOpEx)
+            {
+                _logger.LogWarning(invOpEx, "Invalid operation.");
+                return StatusCode((int)HttpStatusCode.BadRequest, new { message = "Invalid operation." });
             }
             catch (Exception ex)
             {
@@ -370,70 +185,110 @@ namespace BookingEngine.Controllers
             //hotelsSearchRequest.CheckOutDate = hotelsSearchRequest.CheckOutDate.Date;
         }
 
-        private void ValidateAndSanitazeHotelRoomsSearchRequest(HotelRoomsUserRequest hotelRoomsSearchRequest)
+        private static void ValidateAndSanitizeHotelBookingRequest(HotelBookingRequestDTO bookingRequest)
         {
-            if (String.IsNullOrEmpty(hotelRoomsSearchRequest.HotelId))
+            // Validate OfferId
+            ValidateOfferId(bookingRequest.OfferId);
+
+            // Validate Guests
+            if (bookingRequest.Guests == null || bookingRequest.Guests.Count < 1 || bookingRequest.Guests.Count > 99)
             {
-                throw new ArgumentException("Hotel ID must be provided.");
+                throw new ArgumentException("Guests count must be between 1 and 99.");
             }
-            if (hotelRoomsSearchRequest.HotelId.Length != 8)
+            foreach (var guest in bookingRequest.Guests)
             {
-                throw new ArgumentException("Hotel ID must have three letters.");
-            }
-            if (hotelRoomsSearchRequest.CheckInDate.Date < DateTime.Now.Date)
-            {
-                throw new ArgumentException("Check-in date can not be in past.");
-            }
-            if (hotelRoomsSearchRequest.CheckOutDate <= hotelRoomsSearchRequest.CheckInDate.AddDays(1))
-            {
-                throw new ArgumentException("Check-out date must be at least one day after check-in date.");
-            }
-            if (hotelRoomsSearchRequest.Adults < 1 && hotelRoomsSearchRequest.Adults > 9)
-            {
-                throw new ArgumentException("Number of adult guests can be between 1 and 9");
+                ValidateGuest(guest);
             }
 
-            hotelRoomsSearchRequest.CheckInDate = hotelRoomsSearchRequest.CheckInDate.Date;
-            hotelRoomsSearchRequest.CheckOutDate = hotelRoomsSearchRequest.CheckOutDate.Date;
+            // Validate Payments
+            ValidatePayments(bookingRequest.Payments);
         }
 
-        private void ValidateAndSanitazeRoomDetailsSearchRequest(RoomDetailsUserRequest roomDetailsSearchRequest)
+        private static void ValidateOfferId(string offerId)
         {
-            if (String.IsNullOrEmpty(roomDetailsSearchRequest.OfferId))
+            if (string.IsNullOrWhiteSpace(offerId) || offerId.Length < 2 || offerId.Length > 100 || !Regex.IsMatch(offerId, "^[A-Z0-9]*$"))
             {
-                throw new ArgumentException("Offer ID must be provided.");
+                throw new ArgumentException("Invalid offerId.");
             }
-            //if (roomDetailsSearchRequest.Lang.Length != 8)
-            //{
-            //    throw new ArgumentException("Hotel ID must have three letters.");
-            //}
         }
 
-        [NonAction]
-        public void AddToCache(RoomDetailsAmadeusFetchModel response)
+        private static void ValidateGuest(GuestDTO guest)
         {
-            var options = new MemoryCacheEntryOptions
-            {
-                Size = 1,
-                SlidingExpiration = TimeSpan.FromMinutes(2),
-                // Remove from cache after this time, regardless of sliding expiration
-                AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(10)
-            };
+            // Validate Name
+            ValidateName(guest.Name);
 
-            _cache.Set<RoomDetailsAmadeusFetchModel>(KEY, response, options);
+            // Validate Contact
+            ValidateContact(guest.Contact);
         }
 
-        [NonAction]
-        public RoomDetailsAmadeusFetchModel GetCachedModel()
+        private static void ValidateName(NameDTO name)
         {
-            RoomDetailsAmadeusFetchModel model = null;
-            if(!_cache.TryGetValue(KEY, out model))
+            if (!Regex.IsMatch(name.Title, "^[A-Za-z -]*$") || name.Title.Length < 1 || name.Title.Length > 54)
             {
-
+                throw new ArgumentException("Invalid title.");
             }
-            return _cache.Get<RoomDetailsAmadeusFetchModel>(KEY);
+            if (!Regex.IsMatch(name.FirstName, "^[A-Za-z \\p{Lo}\\p{IsKatakana}\\p{IsHiragana}\\p{IsHangulCompatibilityJamo}\\p{IsHangulJamo}\\p{IsHangulSyllables}-]*$") || name.FirstName.Length < 1 || name.FirstName.Length > 56)
+            {
+                throw new ArgumentException("Invalid firstName.");
+            }
+            if (!Regex.IsMatch(name.LastName, "^[A-Za-z \\p{Lo}\\p{IsKatakana}\\p{IsHiragana}\\p{IsHangulCompatibilityJamo}\\p{IsHangulJamo}\\p{IsHangulSyllables}-]*$") || name.LastName.Length < 1 || name.LastName.Length > 57)
+            {
+                throw new ArgumentException("Invalid lastName.");
+            }
         }
 
+        private static void ValidateContact(ContactDTO contact)
+        {
+            if (!Regex.IsMatch(contact.Phone, "^[+][1-9][0-9]{4,18}$") || contact.Phone.Length < 6 || contact.Phone.Length > 20)
+            {
+                throw new ArgumentException("Invalid phone number.");
+            }
+
+            var emailAttribute = new EmailAddressAttribute();
+            if (!emailAttribute.IsValid(contact.Email) || contact.Email.Length < 3 || contact.Email.Length > 90)
+            {
+                throw new ArgumentException("Invalid email address.");
+            }
+        }
+
+        private static void ValidatePayments(List<PaymentDTO> payments)
+        {
+            if (payments == null || payments.Count < 1 || payments.Count > 9)
+            {
+                throw new ArgumentException("Payments count must be between 1 and 9.");
+            }
+            foreach (var payment in payments)
+            {
+                ValidatePayment(payment);
+            }
+        }
+
+        private static void ValidatePayment(PaymentDTO payment)
+        {
+            // Assuming method is always "creditCard", but you could add checks for other types if they become available
+            if (payment.Method.ToLower() != "creditcard")
+            {
+                throw new ArgumentException("Invalid payment method. Only 'creditCard' is accepted.");
+            }
+
+            ValidateCard(payment.Card);
+        }
+
+        private static void ValidateCard(CardDTO card)
+        {
+            if (!Regex.IsMatch(card.VendorCode, "^[A-Z]{2}$"))
+            {
+                throw new ArgumentException("Invalid vendor code.");
+            }
+            if (!Regex.IsMatch(card.CardNumber, "^[0-9]*$") || card.CardNumber.Length < 2 || card.CardNumber.Length > 22)
+            {
+                throw new ArgumentException("Invalid card number.");
+            }
+            if (!Regex.IsMatch(card.ExpiryDate, "^[0-9]{4}-[0-9]{2}$") || card.ExpiryDate.Length != 7)
+            {
+                throw new ArgumentException("Invalid expiry date format. Use YYYY-MM.");
+            }
+        }
     }
 
     public static class SessionExtensions

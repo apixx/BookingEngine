@@ -33,10 +33,12 @@ namespace BookingEngine.BusinessLogic.Models
     public class HotelOffer
     {
         public string Id { get; set; }
+        public int RoomQuantity { get; set; }
         public DateTime CheckInDate { get; set; }
         public DateTime CheckOutDate { get; set; }
         public string RateCode { get; set; }
         public RateFamilyEstimated RateFamilyEstimated { get; set; }
+        public string BoardType { get; set; }
         public Room Room { get; set; }
         public Guests Guests { get; set; }
         public Price Price { get; set; }
@@ -132,5 +134,12 @@ namespace BookingEngine.BusinessLogic.Models
         public List<string> CreditCards { get; set; }
         public List<string> Methods { get; set; }
     }
-
+    public class HotelOfferResponseShortDTO
+    {
+        public string Type { get; set; }
+        public HotelData Hotel { get; set; }
+        public bool Available { get; set; }
+        public HotelOffer Offer { get; set; }
+        public string Self { get; set; }
+    }
 }

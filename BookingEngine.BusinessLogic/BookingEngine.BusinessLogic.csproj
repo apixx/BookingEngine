@@ -16,10 +16,12 @@
   <ItemGroup>
     <ProjectReference Include="..\BookingEngine.Data\BookingEngine.Data.csproj" />
     <ProjectReference Include="..\BookingEngine.Entities\BookingEngine.Entities.csproj" />
+    <ProjectReference Include="..\BookingEngine.Extensions\BookingEngine.Extensions.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <Folder Include="Models\DTOs\" />
+    <Folder Include="Models\AmadeusApiCustomModels\Hotel\HotelSearch\" />
+    <Folder Include="Models\AmadeusApiCustomModels\Hotel\RoomDetails\" />
   </ItemGroup>
 
 </Project>
