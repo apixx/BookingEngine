@@ -6,11 +6,9 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Caching.Memory;
 using System.Net;
 using AutoMapper;
-using BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels;
 using Newtonsoft.Json;
 using BookingEngine.Entities.Models.Authentication;
 using Microsoft.AspNetCore.Identity;
-using BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.Booking;
 using System.ComponentModel.DataAnnotations;
 using System.Text.RegularExpressions;
 using Microsoft.EntityFrameworkCore;
@@ -122,7 +120,7 @@ namespace BookingEngine.Controllers
 
                 // retrive hotel and offer data from session
                 var offers = HttpContext.Session.GetObject<HotelOffersResponse>("HotelSearchResponse");
-
+                
                 var bookingResult = await _hotelsService.ProcessHotelBookingAsync(hotelBookingRequestDto, offers, userId, cancellationToken);
 
                 return Ok(_mapper.Map<HotelBookingResultDTO>(bookingResult));

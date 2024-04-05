@@ -14,11 +14,7 @@ public class OrderRepository : BaseRepository, IOrderRepository
         _unitOfWork = unitOfWork;
     }
 
-    public async Task AddAsync(Order order)
-    {
-        await _dbContext.Orders.AddAsync(order);
-    }
-    public async Task<int> AddOrderAsync(Order order)
+    public async Task<int> AddAsync(Order order)
     {
         using (var transaction = _dbContext.Database.BeginTransaction())
         {

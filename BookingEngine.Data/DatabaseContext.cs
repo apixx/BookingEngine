@@ -39,9 +39,6 @@ namespace BookingEngine.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<OrderStatus> OrderStatus { get; set; }
-        public DbSet<SearchRequest> SearchRequests { get; set; }
-        public DbSet<SearchRequestHotel> SearchRequestHotels { get; set;}
-        public DbSet<Hotel> Hotels { get; set; }
         public DbSet<AssociatedRecordItem> AssociatedRecords { get; set; }
 
         // generating authentication tables

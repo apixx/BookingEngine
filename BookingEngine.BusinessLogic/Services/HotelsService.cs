@@ -84,7 +84,7 @@ namespace BookingEngine.BusinessLogic.Services
                 // 3. Create Order
                 var order = CreateOrderFromBookingData(bookingRequestDto, amadeusResponse, hotelOffer, userId);
     
-                await _orderRepository.AddOrderAsync(order);
+                await _orderRepository.AddAsync(order);
 
                 // 4. Create result object HotelBookingResultDTO
                 _mapper.Map<Order, HotelBookingResultDTO>(order, result);

@@ -5,7 +5,7 @@ using System.Text;
 using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 
-namespace BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.Booking
+namespace BookingEngine.BusinessLogic.Models.AmadeusApiModels.Hotel.Booking
 {
     public class AmadeusApiHotelBookingResponse
     {

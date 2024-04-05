@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Text.Json.Serialization;
 
-namespace BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.Booking
+namespace BookingEngine.BusinessLogic.Models.AmadeusApiModels.Hotel.Booking
 {
 
     public class AmadeusApiHotelBookingRequest

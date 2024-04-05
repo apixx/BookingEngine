@@ -1,4 +1,4 @@
-﻿using BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.Booking;
+﻿using BookingEngine.BusinessLogic.Models.AmadeusApiModels.Hotel.Booking;
 
 namespace BookingEngine.BusinessLogic.Models;
 

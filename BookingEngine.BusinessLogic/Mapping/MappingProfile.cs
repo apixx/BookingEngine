@@ -1,7 +1,7 @@
 ﻿using AutoMapper;
 using BookingEngine.BusinessLogic.Models;
 using BookingEngine.Entities.Models;
-using BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.Booking;
+using BookingEngine.BusinessLogic.Models.AmadeusApiModels.Hotel.Booking;
 
 namespace BookingEngine.BusinessLogic.Mapping
 {
@@ -59,11 +59,11 @@ namespace BookingEngine.BusinessLogic.Mapping
             CreateMap<CardDTO, CardItem>();
             CreateMap<ContactDTO, Contact>();
             CreateMap<NameDTO, NameItem>();
-            CreateMap<RoomDTO, Models.AmadeusApiCustomModels.Hotel.Booking.Room>();
+            CreateMap<RoomDTO, Models.AmadeusApiModels.Hotel.Booking.Room>();
 
             CreateMap<Order, HotelBookingResultDTO>()
                 .ForMember(dest => dest.Bookings, opt => opt.MapFrom(src => src.OrderItems))
-                .ForMember(dest => dest.BookingStatus, opt => opt.MapFrom(src => src.OrderStatus))
+                .ForMember(dest => dest.BookingStatus, opt => opt.MapFrom(src => src.OrderStatus.StatusValue))
                 .ForMember(dest => dest.NumberOfGuests, opt => opt.MapFrom(src => src.Adults));
             CreateMap<AssociatedRecordItem, AssociatedRecordDTO>();
             CreateMap<OrderItem, HotelBookingItemDTO>();

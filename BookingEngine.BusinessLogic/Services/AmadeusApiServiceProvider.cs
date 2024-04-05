@@ -1,6 +1,5 @@
 ﻿using BookingEngine.BusinessLogic.Models;
-using BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels.Hotel.Booking;
-using BookingEngine.BusinessLogic.Models.AmadeusApiCustomModels;
+using BookingEngine.BusinessLogic.Models.AmadeusApiModels.Hotel.Booking;
 using BookingEngine.BusinessLogic.Services.Interfaces;
 using Microsoft.Extensions.Logging;
 using Newtonsoft.Json.Serialization;

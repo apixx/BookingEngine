@@ -150,9 +150,6 @@ namespace BookingEngine
             services.AddSingleton<MyMemoryCache>();
             services.AddScoped<IHotelsService, HotelsService>();
             services.AddScoped<IProcessApiResponse, ProcessApiResponse>();
-            services.AddScoped<ISearchRequestRepository, SearchRequestRepository>();
-            services.AddScoped<ISearchRequestHotelRepository, SearchRequestHotelRepository>();
-            services.AddScoped<IHotelRepository, HotelRepository>();
             services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
 

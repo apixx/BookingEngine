@@ -113,27 +113,6 @@ namespace BookingEngine.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
-            modelBuilder.Entity("BookingEngine.Entities.Models.Hotel", b =>
-                {
-                    b.Property<string>("HotelId")
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("Description")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasMaxLength(250)
-                        .HasColumnType("nvarchar(250)");
-
-                    b.Property<int>("Rating")
-                        .HasColumnType("int");
-
-                    b.HasKey("HotelId");
-
-                    b.ToTable("Hotel", (string)null);
-                });
-
             modelBuilder.Entity("BookingEngine.Entities.Models.Order", b =>
                 {
                     b.Property<int>("Id")
@@ -264,89 +243,6 @@ namespace BookingEngine.Data.Migrations
                             OrderStatusId = 3,
                             StatusValue = "CANCELED"
                         });
-                });
-
-            modelBuilder.Entity("BookingEngine.Entities.Models.SearchRequest", b =>
-                {
-                    b.Property<int>("SearchRequestId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SearchRequestId"), 1L, 1);
-
-                    b.Property<int>("Adults")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
-                        .HasDefaultValue(1);
-
-                    b.Property<DateTime>("CheckInDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<DateTime>("CheckOutDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("CityCode")
-                        .IsRequired()
-                        .HasMaxLength(30)
-                        .HasColumnType("nvarchar(30)");
-
-                    b.Property<string>("NextItemsLink")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("ValidUntil")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("datetime2")
-                        .HasDefaultValue(new DateTime(2022, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified));
-
-                    b.HasKey("SearchRequestId");
-
-                    b.HasIndex("CheckInDate");
-
-                    b.HasIndex("CheckOutDate");
-
-                    b.HasIndex("CityCode");
-
-                    b.HasIndex("CityCode", "CheckInDate", "CheckOutDate");
-
-                    b.ToTable("SearchRequest", (string)null);
-                });
-
-            modelBuilder.Entity("BookingEngine.Entities.Models.SearchRequestHotel", b =>
-                {
-                    b.Property<int>("SearchRequestHotelId")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("SearchRequestHotelId"), 1L, 1);
-
-                    b.Property<bool>("Available")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bit")
-                        .HasDefaultValue(false);
-
-                    b.Property<float?>("Distance")
-                        .HasColumnType("real");
-
-                    b.Property<string>("HotelId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<string>("PriceCurrency")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<float?>("PriceTotal")
-                        .HasColumnType("real");
-
-                    b.Property<int>("SearchRequestId")
-                        .HasColumnType("int");
-
-                    b.HasKey("SearchRequestHotelId");
-
-                    b.HasIndex("HotelId");
-
-                    b.HasIndex("SearchRequestId");
-
-                    b.ToTable("SearchRequestHotel", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -523,25 +419,6 @@ namespace BookingEngine.Data.Migrations
                     b.Navigation("Order");
                 });
 
-            modelBuilder.Entity("BookingEngine.Entities.Models.SearchRequestHotel", b =>
-                {
-                    b.HasOne("BookingEngine.Entities.Models.Hotel", "Hotel")
-                        .WithMany("SearchRequestHotels")
-                        .HasForeignKey("HotelId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("BookingEngine.Entities.Models.SearchRequest", "SearchRequest")
-                        .WithMany("SearchRequestHotels")
-                        .HasForeignKey("SearchRequestId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("Hotel");
-
-                    b.Navigation("SearchRequest");
-                });
-
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -593,11 +470,6 @@ namespace BookingEngine.Data.Migrations
                         .IsRequired();
                 });
 
-            modelBuilder.Entity("BookingEngine.Entities.Models.Hotel", b =>
-                {
-                    b.Navigation("SearchRequestHotels");
-                });
-
             modelBuilder.Entity("BookingEngine.Entities.Models.Order", b =>
                 {
                     b.Navigation("OrderItems");
@@ -606,11 +478,6 @@ namespace BookingEngine.Data.Migrations
             modelBuilder.Entity("BookingEngine.Entities.Models.OrderItem", b =>
                 {
                     b.Navigation("AssociatedRecords");
-                });
-
-            modelBuilder.Entity("BookingEngine.Entities.Models.SearchRequest", b =>
-                {
-                    b.Navigation("SearchRequestHotels");
                 });
 #pragma warning restore 612, 618
         }
