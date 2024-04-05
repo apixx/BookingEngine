@@ -9,4 +9,5 @@ public class AssociatedRecordItem
     public int OrderItemId { get; set; }
     public string Reference { get; set; }
     public string OriginSystemCode { get; set; }
+    public virtual OrderItem OrderItem { get; set; }
 }
