@@ -96,7 +96,7 @@ namespace BookingEngine.BusinessLogic.Models
 
         [DefaultValue("ALL")]
         public string HotelSource { get; set; }
-        
+
         public string ToCacheKey()
         {
             return String.Format("{0},{1},{2},{3},{4},{5},{6}", this.CityCode, this.Radius, this.RadiusUnit, this.ChainCodes, this.Amenities, this.Ratings, this.HotelSource);
@@ -143,10 +143,12 @@ namespace BookingEngine.BusinessLogic.Models
         public DateTime CheckInDate { get; set; }
         public DateTime CheckOutDate { get; set; }
         public int? RoomQuantity { get; set; }
+        public string Currency { get; set; } = "EUR";
+        public bool IncludeClosed { get; set; } = false;
 
         public string ToCacheKey()
         {
-            return String.Format("{0},{1},{2},{3},{4}", this.HotelIds, this.Adults, this.CheckInDate, this.CheckOutDate, this.RoomQuantity);
+            return String.Format("{0},{1},{2},{3},{4},{5},{6}", this.HotelIds, this.Adults, this.CheckInDate, this.CheckOutDate, this.RoomQuantity, this.Currency, this.IncludeClosed);
         }
 
         public async Task<string> ToUrlParamsString()
@@ -157,9 +159,10 @@ namespace BookingEngine.BusinessLogic.Models
             urlParams.Add("adults", Adults.ToString());
             urlParams.Add("checkInDate", CheckInDate.ToString("yyyy-MM-dd"));
             urlParams.Add("checkOutDate", CheckOutDate.ToString("yyyy-MM-dd"));
-            
-            if(RoomQuantity != null && RoomQuantity.HasValue) 
-            { 
+            urlParams.Add("currency", Currency);
+            urlParams.Add("includeClosed", IncludeClosed.ToString());
+            if (RoomQuantity != null && RoomQuantity.HasValue)
+            {
                 urlParams.Add("roomQuantity", RoomQuantity.ToString());
             }
 

@@ -42,38 +42,21 @@ namespace BookingEngine.Controllers
         {
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
                 HotelOffersResponse response;
 
                 ValidateAndSanitazeHotelsSearchRequest(request);
 
-                bool isCacheHit = _cache.TryGetValue(request.ToCacheKey(), out response);
+                _logger.LogInformation($"No cache hit. CityCode: {request.CityCode}, " +
+                    $"Radius: {request.Radius}, RadiusUnit: {request.RadiusUnit}, HotelSource: {request.HotelSource}");
 
-                //if (response == null || !response.Data.Any()) // Check if the result is empty
-                //{
-                //    return NotFound("No hotels found for the specified city.");
-                //}
+                response = await _hotelsService.SearchHotels(request, cancellationToken);
 
-                if (true)//!isCacheHit)
-                {
-                    _logger.LogInformation($"No cache hit. CityCode: {request.CityCode}, " +
-                        $"Radius: {request.Radius}, RadiusUnit: {request.RadiusUnit}, HotelSource: {request.HotelSource}");
-
-                    response = await _hotelsService.SearchHotels(request, cancellationToken);
-
-                    var cacheEntryOptions = new MemoryCacheEntryOptions()
-                        .SetSize(1)
-                        .SetSlidingExpiration(TimeSpan.FromMinutes(2))
-                        // Remove from cache after this time, regardless of sliding expiration
-                        .SetAbsoluteExpiration(TimeSpan.FromMinutes(10));
-
-                    _cache.Set(request.ToCacheKey(), response, cacheEntryOptions);
-                    HttpContext.Session.SetObject("HotelSearchResponse", response);
-                }
-                else
-                {
-                    _logger.LogInformation($"Cache hit for request. CityCode: {request.CityCode}, " +
-                        $"Radius: {request.Radius}, RadiusUnit: {request.RadiusUnit}, HotelSource: {request.HotelSource}");
-                }
+                HttpContext.Session.SetObject("HotelSearchResponse", response);
 
                 return Ok(response);
             }
@@ -108,12 +91,16 @@ namespace BookingEngine.Controllers
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [ProducesResponseType(StatusCodes.Status502BadGateway)]
         [Authorize(Roles = UserRoles.User)]
-        [Authorize]
         public async Task<ActionResult<HotelBookingResultDTO>> Booking([FromBody] HotelBookingRequestDTO hotelBookingRequestDto, CancellationToken cancellationToken)
         {
             
             try
             {
+                if (!ModelState.IsValid)
+                {
+                    return BadRequest(ModelState);
+                }
+
                 ValidateAndSanitizeHotelBookingRequest(hotelBookingRequestDto);
 
                 var userId = _userManager.Users.Where(u => u.UserName.Contains(User.Identity.Name)).Select(u => u.Id).FirstOrDefault();
@@ -162,25 +149,22 @@ namespace BookingEngine.Controllers
             {
                 throw new ArgumentException("City code must have three letters.");
             }
-            //if (hotelsSearchRequest.Radius)
-            //{
-            //    throw new ArgumentException("Check-in date can not be in past.");
-            //}
-            //if (hotelsSearchRequest.CheckOutDate <= hotelsSearchRequest.CheckInDate.AddDays(1))
-            //{
-            //    throw new ArgumentException("Check-out date must be at least one day after check-in date.");
-            //}
-            //if (hotelsSearchRequest.PageSize < 1 || hotelsSearchRequest.PageOffset < 0)
-            //{
-            //    throw new ArgumentException("Invalid page size or page offset values.");
-            //}
-            //if (hotelsSearchRequest.PageSize > 100)
-            //{
-            //    throw new ArgumentException("Maximum page size is 100.");
-            //}
-
-            //hotelsSearchRequest.CheckInDate = hotelsSearchRequest.CheckInDate.Date;
-            //hotelsSearchRequest.CheckOutDate = hotelsSearchRequest.CheckOutDate.Date;
+            if (hotelsSearchRequest.Radius < 1 || hotelsSearchRequest.Radius > 300)
+            {
+                throw new ArgumentException("Radius must have value between 1 and 300.");
+            }
+            if (hotelsSearchRequest.CheckInDate < DateTime.Now)
+            {
+                throw new ArgumentException("Check In Date must be in the future.");
+            }
+            if (hotelsSearchRequest.CheckOutDate < hotelsSearchRequest.CheckInDate.AddDays(1))
+            {
+                throw new ArgumentException("Check Out Date must be at least 1 day later than Check In Date.");
+            }
+            if (hotelsSearchRequest.Adults > hotelsSearchRequest.RoomQuantity * 9 || hotelsSearchRequest.Adults < hotelsSearchRequest.RoomQuantity)
+            {
+                throw new ArgumentException("Number of adults does not correspond with the number of rooms. The maximum capacity of a Room can be 9 adults.");
+            }
         }
 
         private static void ValidateAndSanitizeHotelBookingRequest(HotelBookingRequestDTO bookingRequest)

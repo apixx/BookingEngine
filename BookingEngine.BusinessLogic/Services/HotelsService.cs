@@ -38,7 +38,7 @@ namespace BookingEngine.BusinessLogic.Services
             {
                 List<string> hotelIdsList = new List<string>();
 
-                foreach (var hotel in hotelsData.Data.Take(100))
+                foreach (var hotel in hotelsData.Data.Take(50))
                 {
                     hotelIdsList.Add(hotel.HotelId);
                 }
