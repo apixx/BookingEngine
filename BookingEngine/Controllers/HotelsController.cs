@@ -23,14 +23,11 @@ namespace BookingEngine.Controllers
         private readonly IHotelsService _hotelsService;
         private readonly IMapper _mapper;
         private readonly UserManager<ApplicationUser> _userManager;
-        private MemoryCache _cache;
-        private const string KEY = "user_cache";
 
-        public HotelsController(ILogger<HotelsController> logger, IHotelsService hotelsService, MyMemoryCache memoryCache, UserManager<ApplicationUser> userManager, IMapper mapper)
+        public HotelsController(ILogger<HotelsController> logger, IHotelsService hotelsService, UserManager<ApplicationUser> userManager, IMapper mapper)
         {
             _logger = logger;
             _hotelsService = hotelsService;
-            _cache = memoryCache.Cache;
             _userManager = userManager;
             _mapper = mapper;
         }
@@ -38,7 +35,7 @@ namespace BookingEngine.Controllers
         [HttpGet]
         [Route("search")]
         [Authorize(Roles = UserRoles.User)]
-        public async Task<IActionResult> GetHotelsByCity([FromQuery] HotelSearchRequestModel request, CancellationToken cancellationToken)
+        public async Task<ActionResult<HotelOffersResponse>> GetHotelsByCity([FromQuery] HotelSearchRequestModel request, CancellationToken cancellationToken)
         {
             try
             {
